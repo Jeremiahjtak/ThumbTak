@@ -1,0 +1,2950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ThumbTak | Retro Arcade Ad Ideator</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Retro Arcade + Clean Readability Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            pixel: ['"Press Start 2P"', 'monospace'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"Space Mono"', 'monospace'],
+          },
+          colors: {
+            cream: {
+              50: '#FFFDF7',
+              100: '#FFF8E7',
+              200: '#F5EBD6',
+            },
+            arcade: {
+              blue: '#2563EB',
+              sky: '#38BDF8',
+              mint: '#10B981',
+              coral: '#F43F5E',
+              gold: '#F59E0B',
+              ink: '#1E293B',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Light Retro Cartridge Aesthetic & Tactile Pixel Borders */
+    body {
+      background-color: #FFF8E7;
+      background-image:
+        radial-gradient(#E2D5B8 1.5px, transparent 1.5px),
+        radial-gradient(#E2D5B8 1.5px, #FFF8E7 1.5px);
+      background-size: 28px 28px;
+      background-position: 0 0, 14px 14px;
+      color: #1E293B;
+    }
+
+    .pixel-box {
+      background: #FFFFFF;
+      border: 3px solid #1E293B;
+      box-shadow: 5px 5px 0px #1E293B;
+      border-radius: 16px;
+    }
+
+    .pixel-box-sm {
+      background: #FFFFFF;
+      border: 2.5px solid #1E293B;
+      box-shadow: 3px 3px 0px #1E293B;
+      border-radius: 12px;
+    }
+
+    .pixel-btn {
+      border: 2.5px solid #1E293B;
+      box-shadow: 3px 3px 0px #1E293B;
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+    }
+    .pixel-btn:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0px #1E293B;
+    }
+    .pixel-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0px #1E293B;
+    }
+
+    /* Animated Retro Sprite Keyframes */
+    @keyframes idleBob {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+    }
+    @keyframes mascotDash {
+      0%, 100% { transform: translateY(0px) rotate(-2deg); }
+      25% { transform: translateY(-7px) rotate(2deg); }
+      50% { transform: translateY(0px) rotate(-1deg); }
+      75% { transform: translateY(-5px) rotate(3deg); }
+    }
+    @keyframes blinkEyes {
+      0%, 92%, 100% { transform: scaleY(1); }
+      95% { transform: scaleY(0.1); }
+    }
+    @keyframes sparkleFloat {
+      0%, 100% { opacity: 0.35; transform: scale(0.85) translateY(0); }
+      50% { opacity: 1; transform: scale(1.15) translateY(-4px); }
+    }
+
+    .sprite-bob { animation: idleBob 1.8s ease-in-out infinite; }
+    .sprite-dash { animation: mascotDash 0.45s ease-in-out infinite; }
+    .sprite-eye { transform-origin: center; animation: blinkEyes 4s infinite; }
+    .sprite-sparkle { animation: sparkleFloat 1.6s ease-in-out infinite; }
+
+    /* Perceptual Check 1: 10% Squint & Silhouette Test */
+    .squint-mode #gridContainer {
+      grid-template-columns: repeat(auto-fill, minmax(125px, 1fr)) !important;
+      gap: 12px !important;
+    }
+    .squint-mode .thumb-card .card-details,
+    .squint-mode .thumb-card .card-badges,
+    .squint-mode .thumb-card .card-status-pill {
+      display: none !important;
+    }
+    .squint-mode .thumb-card img {
+      filter: grayscale(100%) contrast(145%) blur(0.6px);
+    }
+
+    /* Perceptual Check 2: Horizontal Mirror Flip (Breaks Visual Habituation) */
+    .mirror-mode .thumb-card img,
+    .mirror-mode #swipeCardImg,
+    .mirror-mode #presentationGrid img {
+      transform: scaleX(-1);
+    }
+
+    @media print {
+      body { background: white !important; color: black !important; }
+      header, aside, #curateToolbar, #toast, .no-print, #autoQueueModal, #deckCompleteModal { display: none !important; }
+      main { display: block !important; width: 100% !important; padding: 0 !important; }
+      #gridContainer { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 16px !important; }
+      .thumb-card { break-inside: avoid; border: 2px solid #1E293B !important; box-shadow: none !important; }
+    }
+  </style>
+</head>
+<body class="font-sans min-h-screen flex flex-col antialiased selection:bg-amber-300 selection:text-slate-900">
+
+  <!-- ================= RETRO ARCADE TOP HUD ================= -->
+  <header class="sticky top-0 z-40 bg-[#FFFDF7]/95 backdrop-blur-md border-b-[3px] border-slate-800 px-3 sm:px-4 lg:px-7 py-2.5 sm:py-3">
+    <div class="max-w-[1650px] mx-auto flex items-center justify-between gap-2 sm:gap-3">
+      
+      <!-- Brand + Animated Pixel Mascot Companion -->
+      <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+        <!-- Animated SVG Pixel Hero: "Tak the Idea Bot" -->
+        <div id="headerMascot" class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-amber-300 border-[2.5px] border-slate-800 shadow-[3px_3px_0px_#1E293B] flex items-center justify-center overflow-hidden flex-shrink-0">
+          <svg viewBox="0 0 32 32" class="w-7 h-7 sm:w-9 sm:h-9 sprite-bob" shape-rendering="crispEdges">
+            <!-- Antenna -->
+            <rect x="15" y="2" width="2" height="4" fill="#1E293B"/>
+            <rect x="14" y="1" width="4" height="2" fill="#F43F5E"/>
+            <!-- Helmet / Head -->
+            <rect x="7" y="6" width="18" height="14" rx="2" fill="#38BDF8" stroke="#1E293B" stroke-width="2"/>
+            <!-- Visor -->
+            <rect x="9" y="9" width="14" height="8" fill="#0F172A"/>
+            <!-- Blinking Pixel Eyes -->
+            <rect x="11" y="11" width="3" height="4" fill="#34D399" class="sprite-eye"/>
+            <rect x="18" y="11" width="3" height="4" fill="#34D399" class="sprite-eye"/>
+            <!-- Happy Pixel Smile -->
+            <rect x="14" y="15" width="4" height="1" fill="#FBBF24"/>
+            <!-- Body -->
+            <rect x="10" y="21" width="12" height="7" fill="#F59E0B" stroke="#1E293B" stroke-width="2"/>
+            <!-- Little Feet -->
+            <rect x="10" y="28" width="4" height="3" fill="#1E293B"/>
+            <rect x="18" y="28" width="4" height="3" fill="#1E293B"/>
+          </svg>
+        </div>
+
+        <div class="min-w-0">
+          <h1 class="font-pixel text-xs sm:text-base tracking-tight text-slate-900 flex items-center gap-1.5">
+            THUMB<span class="text-blue-600">TAK</span>
+            <span class="hidden sm:inline-block text-[9px] font-mono bg-emerald-200 text-slate-900 px-1.5 py-0.5 rounded border border-slate-800 font-bold">LVL <span id="playerLevel">1</span></span>
+          </h1>
+          <p id="mascotSpeech" class="hidden md:block text-[11px] font-mono text-slate-600 font-bold truncate">
+            "Ready Player 1! Drop a prompt to spawn 24 ideas!"
+          </p>
+        </div>
+      </div>
+
+      <!-- Arcade Scoreboard HUD -->
+      <div class="flex items-center gap-1.5 sm:gap-2 bg-amber-100/90 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl border-[2.5px] border-slate-800 shadow-[3px_3px_0px_#1E293B] text-xs font-mono">
+        <button id="btnSprintTimer" title="8-Minute Crazy 8s Arcade Sprint" class="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-300 text-slate-900 border-2 border-slate-800 font-bold hover:bg-amber-400 transition">
+          <i class="fa-solid fa-stopwatch text-[11px]"></i>
+          <span id="sprintClock">08:00</span>
+        </button>
+
+        <div class="hidden sm:block px-2 text-center">
+          <span class="text-[9px] text-slate-500 block font-bold">SPAWNED</span>
+          <span id="statTotal" class="text-slate-900 font-extrabold text-sm">0</span>
+        </div>
+
+        <div class="hidden sm:block w-[2px] h-6 bg-slate-300"></div>
+
+        <div class="px-1.5 sm:px-2 text-center">
+          <span class="text-[9px] text-emerald-700 block font-bold">★ KEPT</span>
+          <span id="statKept" class="text-emerald-600 font-extrabold text-sm">0</span>
+        </div>
+
+        <div class="w-[2px] h-6 bg-slate-300 hidden md:block"></div>
+
+        <div class="px-2 text-center hidden md:block" title="Visual Variety Score — higher variety prevents ad fatigue">
+          <span class="text-[9px] text-blue-700 block font-bold">VARIETY</span>
+          <span id="statVariance" class="text-blue-600 font-extrabold text-sm">0%</span>
+        </div>
+      </div>
+
+      <!-- Top Action Buttons -->
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <button id="btnSoundToggle" title="Toggle Retro Arcade SFX" class="pixel-btn px-2 sm:px-2.5 py-2 bg-cream-100 text-slate-800 rounded-xl text-xs font-bold">
+          <i id="soundIcon" class="fa-solid fa-volume-high text-blue-600"></i>
+        </button>
+
+        <button id="btnPresentation" class="pixel-btn flex items-center gap-1.5 px-2.5 sm:px-3 py-2 bg-sky-200 hover:bg-sky-300 text-slate-900 text-xs font-extrabold rounded-xl">
+          <i class="fa-solid fa-scale-balanced text-blue-700"></i>
+          <span class="hidden md:inline">Budget Vote & Top 3</span>
+        </button>
+
+        <div class="relative group">
+          <button id="btnExportMenu" class="pixel-btn flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 bg-emerald-400 hover:bg-emerald-500 text-slate-900 text-xs font-extrabold rounded-xl">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span class="hidden sm:inline">Save Deck</span>
+            <i class="fa-solid fa-caret-down text-[11px]"></i>
+          </button>
+          
+          <div class="absolute right-0 mt-2 w-60 pixel-box p-1.5 hidden group-hover:block hover:block z-50">
+            <button id="btnExportPrint" class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-amber-100 flex items-center gap-2.5 text-slate-800">
+              <i class="fa-solid fa-print text-blue-600 w-4"></i>
+              <span>Print Brief Sheet (PDF)</span>
+            </button>
+            <button id="btnExportJson" class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-amber-100 flex items-center gap-2.5 text-slate-800">
+              <i class="fa-solid fa-code text-emerald-600 w-4"></i>
+              <span>Copy Figma & Rotation JSON</span>
+            </button>
+            <div class="my-1 border-t-2 border-slate-200"></div>
+            <button id="btnClearCanvas" class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-rose-100 text-rose-600 flex items-center gap-2.5">
+              <i class="fa-solid fa-bomb w-4"></i>
+              <span>Reset Cartridge</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================= MAIN LIGHT ARCADE WORKSPACE ================= -->
+  <main class="flex-1 max-w-[1650px] w-full mx-auto p-4 lg:p-6 pb-24 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- LEFT CONTROLLER CONSOLE (Streamlined 3-Step Flow Above the Fold) -->
+    <aside class="lg:col-span-4 xl:col-span-3">
+      <div class="pixel-box p-4 sm:p-5 space-y-3.5 sticky top-20">
+        
+        <!-- Controller Header -->
+        <div class="flex items-center justify-between pb-2 border-b-2 border-slate-200">
+          <span class="font-pixel text-[10px] text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-gamepad text-rose-500 text-sm"></i> IDEA CONSOLE
+          </span>
+          <button id="btnQuickSample" class="text-[11px] font-mono font-bold text-blue-600 hover:text-rose-500 underline transition">
+            + Quest Sample
+          </button>
+        </div>
+
+        <!-- Step 1: Prompt Mission -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-extrabold text-slate-800">
+            1. Your Ad Quest / Hook
+          </label>
+          <textarea id="inputBrief" rows="2" placeholder="e.g. Twisted copper wire crane sculpture on a sunlit pedestal..." class="w-full bg-cream-100 border-2 border-slate-800 focus:bg-white focus:border-blue-600 rounded-xl p-2.5 text-xs font-medium text-slate-900 placeholder-slate-400 resize-none outline-none transition"></textarea>
+        </div>
+
+        <!-- Step 2: Platform Preset (One-Click Ratio + Batch Size) -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-extrabold text-slate-800">2. Platform Preset</label>
+          <div class="grid grid-cols-2 gap-1.5" id="presetSelector">
+            <button type="button" data-preset="youtube" class="preset-btn py-1.5 px-2 bg-rose-50 hover:bg-rose-100 border-2 border-slate-800 rounded-lg text-[10px] font-mono font-bold text-slate-900 flex items-center gap-1.5">
+              <i class="fa-brands fa-youtube text-rose-600"></i>
+              <span>YouTube (16:9)</span>
+            </button>
+            <button type="button" data-preset="meta" class="preset-btn py-1.5 px-2 bg-sky-50 hover:bg-sky-100 border-2 border-slate-800 rounded-lg text-[10px] font-mono font-bold text-slate-900 flex items-center gap-1.5">
+              <i class="fa-brands fa-instagram text-pink-600"></i>
+              <span>Meta/IG (4:5)</span>
+            </button>
+            <button type="button" data-preset="tiktok" class="preset-btn py-1.5 px-2 bg-emerald-50 hover:bg-emerald-100 border-2 border-slate-800 rounded-lg text-[10px] font-mono font-bold text-slate-900 flex items-center gap-1.5">
+              <i class="fa-brands fa-tiktok text-slate-900"></i>
+              <span>Shorts/Reels (9:16)</span>
+            </button>
+            <button type="button" data-preset="storyboard" class="preset-btn py-1.5 px-2 bg-amber-50 hover:bg-amber-100 border-2 border-slate-800 rounded-lg text-[10px] font-mono font-bold text-slate-900 flex items-center gap-1.5">
+              <i class="fa-solid fa-film text-amber-600"></i>
+              <span>Storyboard (24)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 3: Optional Seed Photo OR Quick Sketch Blueprint -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-extrabold text-slate-800">3. Visual Seed <span class="text-[10px] font-normal text-slate-500">(Optional)</span></label>
+            <div class="flex items-center gap-1 bg-cream-200 p-0.5 rounded-lg border-2 border-slate-800 text-[10px] font-mono font-bold">
+              <button type="button" id="tabInputPhoto" class="px-2 py-0.5 rounded bg-amber-300 text-slate-900">Photo</button>
+              <button type="button" id="tabInputSketch" class="px-2 py-0.5 rounded text-slate-600 hover:text-slate-900">Sketch</button>
+            </div>
+          </div>
+
+          <!-- Photo Uploader -->
+          <div id="photoInputPanel">
+            <div id="dropzone" class="border-2 border-dashed border-slate-800 hover:border-blue-600 rounded-xl p-2.5 bg-sky-50/70 text-center cursor-pointer transition relative group">
+              <input type="file" id="fileInput" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" />
+              
+              <div id="dropzoneEmpty" class="flex items-center justify-center gap-2 py-0.5">
+                <i class="fa-solid fa-image text-blue-600 text-base group-hover:scale-110 transition-transform"></i>
+                <span class="text-[11px] text-slate-800 font-bold">Drop 1 reference image</span>
+              </div>
+
+              <div id="dropzonePreview" class="hidden flex items-center gap-3 text-left">
+                <img id="seedImgPreview" src="" alt="Seed thumbnail" class="w-10 h-10 rounded-lg object-cover border-2 border-slate-800 bg-white flex-shrink-0" />
+                <div class="flex-1 min-w-0">
+                  <p id="seedImgName" class="text-xs font-extrabold text-slate-900 truncate">seed.png</p>
+                  <button type="button" id="btnRemoveSeed" class="text-[10px] text-rose-600 font-bold hover:underline z-20 relative">Remove</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lo-Fi Sketchpad -->
+          <div id="sketchInputPanel" class="hidden space-y-1.5">
+            <div class="relative rounded-xl overflow-hidden border-2 border-slate-800 bg-white flex items-center justify-center">
+              <canvas id="lofiSketchCanvas" width="240" height="140" class="w-full h-[115px] cursor-crosshair touch-none"></canvas>
+              <span class="absolute top-1.5 left-2 text-[9px] font-mono font-bold text-slate-400 pointer-events-none">DRAW SHAPES</span>
+              <button type="button" id="btnClearSketch" class="absolute top-1.5 right-1.5 px-2 py-0.5 rounded bg-amber-200 border border-slate-800 text-[10px] text-slate-900 font-mono font-bold">
+                Clear
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Collapsible Format & Render Settings Accordion (Keeps SPAWN Button Above the Fold) -->
+        <div class="border-t-2 border-slate-200 pt-2">
+          <button type="button" id="btnToggleAdvancedConsole" class="w-full py-1.5 px-2.5 rounded-lg bg-cream-100 hover:bg-amber-100 border border-slate-300 text-[11px] font-mono font-bold text-slate-800 flex items-center justify-between">
+            <span><i class="fa-solid fa-sliders text-blue-600 mr-1.5"></i> Format & Render (<span id="advancedSummaryBadge">1:1 • 24</span>)</span>
+            <i id="advancedChevron" class="fa-solid fa-chevron-down text-[10px] transition-transform"></i>
+          </button>
+
+          <div id="advancedConsoleDrawer" class="hidden pt-3 space-y-3">
+            <!-- Screen Format -->
+            <div class="space-y-1.5">
+              <label class="block text-xs font-extrabold text-slate-800">Screen Ratio</label>
+              <div class="grid grid-cols-4 gap-1.5" id="ratioSelector">
+                <button data-ratio="1:1" class="ratio-btn py-1.5 px-1 bg-amber-300 border-2 border-slate-800 text-slate-900 rounded-lg text-xs font-mono font-bold flex flex-col items-center gap-0.5">
+                  <span class="w-3 h-3 border-2 border-slate-800"></span>
+                  <span>1:1</span>
+                </button>
+                <button data-ratio="4:5" class="ratio-btn py-1.5 px-1 bg-cream-100 border-2 border-slate-300 text-slate-600 hover:border-slate-800 rounded-lg text-xs font-mono font-bold flex flex-col items-center gap-0.5">
+                  <span class="w-2.5 h-3.5 border-2 border-current"></span>
+                  <span>4:5</span>
+                </button>
+                <button data-ratio="16:9" class="ratio-btn py-1.5 px-1 bg-cream-100 border-2 border-slate-300 text-slate-600 hover:border-slate-800 rounded-lg text-xs font-mono font-bold flex flex-col items-center gap-0.5">
+                  <span class="w-3.5 h-2 border-2 border-current"></span>
+                  <span>16:9</span>
+                </button>
+                <button data-ratio="custom" class="ratio-btn py-1.5 px-1 bg-cream-100 border-2 border-slate-300 text-slate-600 hover:border-slate-800 rounded-lg text-xs font-mono font-bold flex flex-col items-center gap-0.5">
+                  <i class="fa-solid fa-sliders text-[10px] mt-0.5"></i>
+                  <span>Custom</span>
+                </button>
+              </div>
+
+              <div id="customRatioInputs" class="hidden grid grid-cols-2 gap-2 pt-1">
+                <div>
+                  <span class="text-[10px] text-slate-600 font-mono font-bold block mb-0.5">Width</span>
+                  <input type="number" id="customWidth" value="9" min="1" max="100" class="w-full bg-cream-100 border-2 border-slate-800 rounded-lg p-1.5 text-xs text-center font-mono font-bold text-slate-900">
+                </div>
+                <div>
+                  <span class="text-[10px] text-slate-600 font-mono font-bold block mb-0.5">Height</span>
+                  <input type="number" id="customHeight" value="16" min="1" max="100" class="w-full bg-cream-100 border-2 border-slate-800 rounded-lg p-1.5 text-xs text-center font-mono font-bold text-slate-900">
+                </div>
+              </div>
+            </div>
+
+            <!-- Spawn Volume -->
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between text-xs font-extrabold text-slate-800">
+                <span>Spawn Count</span>
+                <span id="volumeBadge" class="font-mono text-blue-700 font-bold bg-sky-100 px-2 py-0.5 rounded border border-slate-800">24 Cards</span>
+              </div>
+              <div class="grid grid-cols-4 gap-1.5" id="volumeSelector">
+                <button data-vol="8" class="vol-btn py-1.5 rounded-lg text-xs font-mono font-bold border-2 border-slate-300 bg-cream-100 text-slate-600 hover:border-slate-800" title="Crazy 8s Sprint">8</button>
+                <button data-vol="24" class="vol-btn py-1.5 rounded-lg text-xs font-mono font-bold border-2 border-slate-800 bg-amber-300 text-slate-900" title="Storyboard / Logo Batch">24</button>
+                <button data-vol="50" class="vol-btn py-1.5 rounded-lg text-xs font-mono font-bold border-2 border-slate-300 bg-cream-100 text-slate-600 hover:border-slate-800">50</button>
+                <button data-vol="100" class="vol-btn py-1.5 rounded-lg text-xs font-mono font-bold border-2 border-slate-300 bg-cream-100 text-slate-600 hover:border-slate-800">100</button>
+              </div>
+            </div>
+
+            <!-- Visual Render Style -->
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between text-xs font-extrabold text-slate-800">
+                <span>Visual Render</span>
+                <span id="fidelityLabel" class="font-mono text-[10px] bg-slate-800 text-white px-2 py-0.5 rounded">Full AI Scene</span>
+              </div>
+              <div class="grid grid-cols-3 gap-1.5" id="fidelitySelector">
+                <button data-fidelity="notan" class="fidelity-btn py-1.5 px-1 rounded-lg text-[10px] font-mono font-bold border-2 border-slate-300 bg-cream-100 text-slate-600 hover:border-slate-800">
+                  Monochrome
+                </button>
+                <button data-fidelity="study" class="fidelity-btn py-1.5 px-1 rounded-lg text-[10px] font-mono font-bold border-2 border-slate-300 bg-cream-100 text-slate-600 hover:border-slate-800">
+                  Vibrant AI
+                </button>
+                <button data-fidelity="polish" class="fidelity-btn py-1.5 px-1 rounded-lg text-[10px] font-mono font-bold border-2 border-slate-800 bg-amber-300 text-slate-900">
+                  Full AI Scene
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BIG ARCADE START BUTTON -->
+        <button id="btnGenerate" class="pixel-btn w-full py-3.5 px-4 bg-rose-500 hover:bg-rose-600 text-white font-pixel text-[11px] leading-relaxed rounded-xl flex items-center justify-center gap-2.5">
+          <i class="fa-solid fa-play text-amber-300 text-sm"></i>
+          <span>SPAWN 24 IDEAS!</span>
+        </button>
+
+      </div>
+    </aside>
+
+    <!-- RIGHT GAME BOARD & CONTACT SHEET -->
+    <section id="workspaceSection" class="lg:col-span-8 xl:col-span-9 space-y-4">
+      
+      <!-- Filter & Perceptual Check Toolbar -->
+      <div id="curateToolbar" class="pixel-box-sm flex flex-wrap items-center justify-between gap-2.5 p-2.5">
+        
+        <!-- Filter Tabs -->
+        <div class="flex items-center gap-1 bg-cream-100 p-1 rounded-xl border-2 border-slate-800 text-xs font-bold">
+          <button data-filter="all" class="filter-tab active px-2.5 py-1.5 rounded-lg bg-amber-300 text-slate-900 transition flex items-center gap-1.5">
+            <span>All</span>
+            <span id="tabCountAll" class="text-[10px] font-mono px-1.5 bg-white text-slate-900 rounded-full border border-slate-800">0</span>
+          </button>
+          <button data-filter="kept" class="filter-tab px-2.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-star text-amber-500 text-[11px]"></i>
+            <span>Favorites</span>
+            <span id="tabCountKept" class="text-[10px] font-mono px-1.5 bg-emerald-200 text-slate-900 rounded-full border border-slate-800">0</span>
+          </button>
+          <button data-filter="killed" class="filter-tab px-2.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-ghost text-slate-400 text-[11px]"></i>
+            <span>Passed</span>
+            <span id="tabCountKilled" class="text-[10px] font-mono px-1.5 bg-slate-200 text-slate-700 rounded-full border border-slate-800">0</span>
+          </button>
+        </div>
+
+        <!-- Quick Layout Checks & Swipe Re-entry -->
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="btnReopenSwipe" title="Jump back into rapid card swiping" class="hidden pixel-btn text-xs px-3 py-1.5 bg-amber-200 hover:bg-amber-300 text-slate-900 rounded-lg font-mono font-bold flex items-center gap-1.5">
+            <i class="fa-solid fa-layer-group text-amber-700"></i>
+            <span>Swipe Cards</span>
+          </button>
+
+          <button id="btnToggleSquint" title="Shrink to tiny phone-screen size in black & white to see if the main subject still stands out" class="pixel-btn text-xs px-3 py-1.5 bg-sky-100 hover:bg-sky-200 text-slate-900 rounded-lg font-mono font-bold flex items-center gap-1.5">
+            <i class="fa-solid fa-mobile-screen text-blue-600"></i>
+            <span>Tiny Phone Check</span>
+          </button>
+
+          <button id="btnToggleMirror" title="Flip images left-to-right so your eyes spot lopsided layouts" class="pixel-btn text-xs px-3 py-1.5 bg-purple-100 hover:bg-purple-200 text-slate-900 rounded-lg font-mono font-bold flex items-center gap-1.5">
+            <i class="fa-solid fa-left-right text-purple-600"></i>
+            <span>Flip Left/Right</span>
+          </button>
+
+          <button id="btnUpgradeFavorites" title="Render starred favorites with Real AI Image Generation" class="pixel-btn text-xs px-3 py-1.5 bg-emerald-300 hover:bg-emerald-400 text-slate-900 rounded-lg font-bold flex items-center gap-1.5">
+            <i class="fa-solid fa-wand-magic-sparkles text-emerald-800"></i>
+            <span class="hidden sm:inline">Render Real AI Favorites</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Arcade Speech Toast -->
+      <div id="toast" class="hidden pixel-box-sm p-3 bg-amber-200 text-xs font-bold text-slate-900 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <span class="text-base">👾</span>
+          <span id="toastMessage">Power-up acquired!</span>
+        </div>
+        <button onclick="hideToast()" class="text-slate-700 hover:text-slate-950 font-bold"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- Loading Stage Bar -->
+      <div id="generationProgress" class="hidden pixel-box p-4 text-xs space-y-2 bg-sky-50">
+        <div class="flex items-center justify-between font-mono font-bold">
+          <span class="text-blue-700 flex items-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles fa-spin"></i>
+            <span id="progressText">Spawning thumbnail cartridges...</span>
+          </span>
+          <span id="progressPercent" class="text-slate-900">0%</span>
+        </div>
+        <div class="w-full bg-white h-3 rounded-full border-2 border-slate-800 overflow-hidden">
+          <div id="progressBar" class="bg-emerald-400 h-full w-0 transition-all duration-200"></div>
+        </div>
+      </div>
+
+      <!-- Playful Animated Empty State Stage -->
+      <div id="emptyState" class="pixel-box p-10 lg:p-16 text-center space-y-5 bg-white">
+        <!-- Animated Pixel Cast: Art Director Cat + Pixel Palette -->
+        <div class="flex items-center justify-center gap-6">
+          <!-- Character 1: Pixel Art Cat Director -->
+          <svg viewBox="0 0 40 40" class="w-20 h-20 sprite-bob" shape-rendering="crispEdges">
+            <!-- Cat Ears -->
+            <polygon points="8,14 8,5 15,11" fill="#F59E0B" stroke="#1E293B" stroke-width="2"/>
+            <polygon points="32,14 32,5 25,11" fill="#F59E0B" stroke="#1E293B" stroke-width="2"/>
+            <!-- Head -->
+            <rect x="8" y="11" width="24" height="18" rx="4" fill="#FBBF24" stroke="#1E293B" stroke-width="2"/>
+            <!-- Cool Beret -->
+            <ellipse cx="22" cy="10" rx="10" ry="3.5" fill="#F43F5E" stroke="#1E293B" stroke-width="2"/>
+            <!-- Eyes -->
+            <rect x="13" y="17" width="3" height="4" fill="#1E293B" class="sprite-eye"/>
+            <rect x="24" y="17" width="3" height="4" fill="#1E293B" class="sprite-eye"/>
+            <!-- Whiskers & Nose -->
+            <rect x="19" y="21" width="2" height="2" fill="#F43F5E"/>
+            <rect x="16" y="24" width="8" height="2" fill="#1E293B"/>
+            <!-- Scarf -->
+            <rect x="11" y="29" width="18" height="4" fill="#38BDF8" stroke="#1E293B" stroke-width="2"/>
+          </svg>
+
+          <!-- Floating Sparkle Stars -->
+          <div class="flex flex-col gap-2 text-amber-400 text-lg">
+            <i class="fa-solid fa-star sprite-sparkle"></i>
+            <i class="fa-solid fa-bolt text-blue-500 sprite-sparkle" style="animation-delay: 0.5s;"></i>
+          </div>
+
+          <!-- Character 2: Pixel Pencil Wizard -->
+          <svg viewBox="0 0 40 40" class="w-20 h-20 sprite-bob" style="animation-delay: 0.4s;" shape-rendering="crispEdges">
+            <!-- Wizard Hat -->
+            <polygon points="20,2 9,14 31,14" fill="#6366F1" stroke="#1E293B" stroke-width="2"/>
+            <rect x="6" y="13" width="28" height="3" fill="#4F46E5" stroke="#1E293B" stroke-width="2"/>
+            <!-- Face -->
+            <rect x="11" y="16" width="18" height="14" fill="#FDE68A" stroke="#1E293B" stroke-width="2"/>
+            <!-- Glasses -->
+            <rect x="12" y="19" width="6" height="5" fill="#FFFFFF" stroke="#1E293B" stroke-width="1.5"/>
+            <rect x="22" y="19" width="6" height="5" fill="#FFFFFF" stroke="#1E293B" stroke-width="1.5"/>
+            <rect x="18" y="21" width="4" height="1.5" fill="#1E293B"/>
+            <!-- Pupils -->
+            <rect x="14" y="21" width="2" height="2" fill="#1E293B" class="sprite-eye"/>
+            <rect x="24" y="21" width="2" height="2" fill="#1E293B" class="sprite-eye"/>
+            <!-- Smile -->
+            <rect x="17" y="26" width="6" height="2" fill="#1E293B"/>
+          </svg>
+        </div>
+
+        <div class="max-w-md mx-auto space-y-3">
+          <h3 class="font-pixel text-xs sm:text-sm text-slate-900">INSERT PROMPT TO START!</h3>
+          <p class="text-xs text-slate-600 leading-relaxed font-medium">
+            Type your ad hook or upload a thumbnail on the left, then smash <span class="px-1.5 py-0.5 bg-rose-100 text-rose-700 font-bold rounded border border-rose-300">SPAWN 24 IDEAS!</span> to swipe through your cards arcade-style.
+          </p>
+          <div class="pt-1">
+            <button type="button" id="btnLoadDemoDeck" class="pixel-btn px-4 py-2.5 bg-amber-300 hover:bg-amber-400 text-slate-900 text-xs font-extrabold rounded-xl inline-flex items-center gap-2">
+              <i class="fa-solid fa-bolt text-rose-600"></i>
+              <span>Try Live 8-Card Demo Deck</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Thumbnails Contact Sheet Grid -->
+      <div id="gridContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <!-- Cards injected via JS -->
+      </div>
+
+    </section>
+  </main>
+
+  <!-- ================= AUTOMATIC POPUP: ARCADE SWIPE REVIEW QUEUE ================= -->
+  <div id="autoQueueModal" class="fixed inset-0 z-50 bg-[#FFF8E7]/95 backdrop-blur-md hidden flex-col items-center justify-between p-4 sm:p-6 select-none">
+    
+    <!-- Top Arcade Progress Bar -->
+    <div class="w-full max-w-xl pixel-box-sm px-4 py-2.5 flex items-center justify-between bg-white">
+      <div class="flex items-center gap-2.5">
+        <!-- Mini Animated Judge Sprite -->
+        <svg viewBox="0 0 24 24" class="w-7 h-7 sprite-dash" shape-rendering="crispEdges">
+          <rect x="4" y="4" width="16" height="14" rx="3" fill="#FBBF24" stroke="#1E293B" stroke-width="2"/>
+          <rect x="7" y="9" width="3" height="3" fill="#1E293B"/>
+          <rect x="14" y="9" width="3" height="3" fill="#1E293B"/>
+          <rect x="9" y="14" width="6" height="2" fill="#F43F5E"/>
+        </svg>
+        <h2 class="font-pixel text-[10px] sm:text-xs text-slate-900">CARD JUDGE</h2>
+        <span id="queueProgressBadge" class="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-300 text-slate-900 border-2 border-slate-800">1 / 24</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="btnQueueMirror" title="Flip left-to-right to check layout balance" class="pixel-btn text-[10px] font-mono font-bold text-purple-900 px-2.5 py-1 rounded-lg bg-purple-100 hover:bg-purple-200">
+          <i class="fa-solid fa-left-right"></i> Flip
+        </button>
+        <button id="btnCloseQueue" class="pixel-btn text-xs font-bold text-slate-800 px-3 py-1 rounded-lg bg-cream-100 hover:bg-amber-100">
+          Exit <i class="fa-solid fa-xmark ml-1"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Swipable Cartridge Viewport -->
+    <div class="flex-1 w-full max-w-md flex items-center justify-center py-3 relative">
+      <div id="swipeCardContainer" class="w-full relative touch-none cursor-grab active:cursor-grabbing">
+        <div id="swipeCard" class="w-full pixel-box overflow-hidden transition-transform duration-100 flex flex-col bg-white">
+          
+          <div id="swipeCardAspectWrap" class="relative w-full max-h-[340px] aspect-square bg-slate-100 border-b-[3px] border-slate-800 overflow-hidden flex items-center justify-center mx-auto">
+            <img id="swipeCardImg" src="" alt="Thumbnail preview" class="w-full h-full object-cover pointer-events-none select-none" />
+            
+            <!-- Warm-Up Throwaway Badge -->
+            <div id="swipeWarmupBadge" class="hidden absolute bottom-3 left-3 px-2.5 py-1 rounded-lg bg-amber-200 text-slate-900 font-mono text-[10px] font-extrabold border-2 border-slate-800 shadow-[2px_2px_0px_#1E293B]">
+              🔥 WARM-UP DRAFT (First Idea)
+            </div>
+
+            <!-- Arcade Stamp Overlays -->
+            <div id="stampKeep" style="opacity: 0;" class="absolute top-5 left-5 px-4 py-2 rounded-xl border-[3px] border-slate-900 bg-emerald-400 text-slate-900 font-pixel text-sm shadow-[4px_4px_0px_#1E293B] -rotate-12 pointer-events-none">
+              ★ KEEP!
+            </div>
+            <div id="stampKill" style="opacity: 0;" class="absolute top-5 right-5 px-4 py-2 rounded-xl border-[3px] border-slate-900 bg-rose-500 text-white font-pixel text-sm shadow-[4px_4px_0px_#1E293B] rotate-12 pointer-events-none">
+              ✕ PASS
+            </div>
+          </div>
+
+          <div class="p-4 space-y-2.5 bg-white">
+            <div class="flex items-center justify-between">
+              <span id="swipeCardStyle" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-sky-200 text-slate-900 border border-slate-800">STYLE</span>
+              <span id="swipeCardCluster" class="text-[10px] font-mono font-bold text-indigo-700">CLUSTER</span>
+              <span id="swipeCardRatio" class="text-[10px] font-mono font-bold text-slate-500">1:1</span>
+            </div>
+            <div>
+              <h3 id="swipeCardHeadline" class="text-sm font-extrabold text-slate-900 line-clamp-1">Hook Headline</h3>
+              <p id="swipeCardDesc" class="text-xs text-slate-600 line-clamp-2 mt-0.5">Visual composition details...</p>
+            </div>
+
+            <!-- Quick Bonus Tags -->
+            <div class="pt-2 border-t-2 border-slate-100 flex items-center justify-between gap-1">
+              <span class="text-[10px] font-mono font-bold text-slate-500">CHECK:</span>
+              <div class="flex items-center gap-1.5">
+                <button type="button" data-rubric="silhouette" class="rubric-pill px-2 py-0.5 rounded-md text-[10px] font-mono font-bold border-2 border-slate-300 bg-cream-100 text-slate-700 hover:border-slate-800 transition">+ Clear Shape</button>
+                <button type="button" data-rubric="novelty" class="rubric-pill px-2 py-0.5 rounded-md text-[10px] font-mono font-bold border-2 border-slate-300 bg-cream-100 text-slate-700 hover:border-slate-800 transition">+ Fresh Idea</button>
+                <button type="button" data-rubric="strategy" class="rubric-pill px-2 py-0.5 rounded-md text-[10px] font-mono font-bold border-2 border-slate-300 bg-cream-100 text-slate-700 hover:border-slate-800 transition">+ On Topic</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Tactile Arcade Buttons -->
+    <div class="w-full max-w-md space-y-2">
+      <div class="flex items-center justify-center gap-5">
+        <button id="btnQueueUndo" title="Rewind previous swipe (Z)" class="pixel-btn w-12 h-12 rounded-xl bg-amber-200 hover:bg-amber-300 text-slate-900 flex items-center justify-center text-base">
+          <i class="fa-solid fa-rotate-left"></i>
+        </button>
+        <button id="btnQueueKill" class="pixel-btn w-16 h-16 rounded-2xl bg-rose-400 hover:bg-rose-500 text-white flex items-center justify-center text-2xl">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <button id="btnQueueKeep" class="pixel-btn w-20 h-20 rounded-2xl bg-emerald-400 hover:bg-emerald-500 text-slate-900 flex items-center justify-center text-3xl">
+          <i class="fa-solid fa-star"></i>
+        </button>
+      </div>
+      <p class="text-center text-[11px] text-slate-600 font-mono font-bold">
+        Swipe card or tap <kbd class="px-1.5 py-0.5 bg-white rounded border-2 border-slate-800">←</kbd> Pass / <kbd class="px-1.5 py-0.5 bg-white rounded border-2 border-slate-800">→</kbd> Keep / <kbd class="px-1.5 py-0.5 bg-white rounded border-2 border-slate-800">Z</kbd> Undo
+      </p>
+    </div>
+  </div>
+
+  <!-- ================= FLOATING NEXT-STEP ACTION BAR ================= -->
+  <div id="floatingNextBar" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 hidden w-[94%] max-w-2xl pixel-box px-4 py-2.5 bg-[#FFFDF7]/95 backdrop-blur-md flex-wrap items-center justify-between gap-3 no-print">
+    <div class="flex items-center gap-2 text-xs font-extrabold text-slate-900">
+      <span class="px-2 py-0.5 rounded-md bg-emerald-400 border-2 border-slate-800 font-mono">★ <span id="floatingKeptCount">0</span></span>
+      <span>Favorites ready for next step:</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="button" id="btnFloatingRenderAi" class="pixel-btn px-3 py-1.5 bg-amber-300 hover:bg-amber-400 text-slate-900 text-xs font-extrabold rounded-lg flex items-center gap-1.5">
+        <i class="fa-solid fa-wand-magic-sparkles text-blue-700"></i>
+        <span>Render Real AI</span>
+      </button>
+      <button type="button" id="btnFloatingVote" class="pixel-btn px-3 py-1.5 bg-emerald-400 hover:bg-emerald-500 text-slate-900 text-xs font-extrabold rounded-lg flex items-center gap-1.5">
+        <span>Vote & Test Top 3</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= STAGE CLEAR: EXPORT BRIEF DECK POPUP ================= -->
+  <div id="deckCompleteModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="w-full max-w-md pixel-box p-6 space-y-5 bg-white">
+      <div class="text-center space-y-2">
+        <!-- Animated Trophy Sprite -->
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-amber-300 border-[3px] border-slate-800 shadow-[4px_4px_0px_#1E293B] flex items-center justify-center sprite-bob">
+          <i class="fa-solid fa-trophy text-slate-900 text-2xl"></i>
+        </div>
+        <h2 class="font-pixel text-sm text-slate-900 pt-1">FIRST ROUND DONE!</h2>
+        <p class="text-xs text-slate-600 font-medium">Next: Add color to your favorites & vote on the top 3.</p>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2.5 bg-cream-100 p-3.5 rounded-2xl border-2 border-slate-800 text-center font-mono">
+        <div>
+          <span class="text-[10px] text-slate-500 font-bold block">★ KEPT</span>
+          <span id="completeKeptCount" class="text-xl font-extrabold text-emerald-600">0</span>
+        </div>
+        <div>
+          <span class="text-[10px] text-slate-500 font-bold block">PASSED</span>
+          <span id="completeKilledCount" class="text-xl font-extrabold text-rose-500">0</span>
+        </div>
+        <div>
+          <span class="text-[10px] text-slate-500 font-bold block">VARIETY</span>
+          <span id="completeVarianceScore" class="text-xl font-extrabold text-blue-600">0%</span>
+        </div>
+      </div>
+
+      <div class="bg-sky-100 border-2 border-slate-800 rounded-xl p-3 text-[11px] text-slate-800 space-y-1">
+        <div class="font-extrabold text-blue-800 flex items-center gap-1.5">
+          <i class="fa-solid fa-layer-group"></i>
+          <span>Step-by-Step Polish</span>
+        </div>
+        <p class="text-slate-700 leading-relaxed">
+          Upgrade your starred favorites to <strong>2. Color Draft</strong>, then spend your $100 play-money budget to pick the top 3 winners.
+        </p>
+      </div>
+
+      <div class="space-y-2.5">
+        <button id="btnCompletePromote" class="pixel-btn w-full py-3 px-4 bg-emerald-400 hover:bg-emerald-500 text-slate-900 font-extrabold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-2">
+          <i class="fa-solid fa-angles-up"></i>
+          <span>Upgrade Favorites to Color Draft</span>
+        </button>
+        <button id="btnCompleteDollarTest" class="pixel-btn w-full py-3 px-4 bg-amber-300 hover:bg-amber-400 text-slate-900 font-extrabold text-xs rounded-xl flex items-center justify-center gap-2">
+          <i class="fa-solid fa-sack-dollar text-emerald-700"></i>
+          <span>Open $100 Budget Vote & Top 3 Test</span>
+        </button>
+        <button id="btnCompleteClose" class="w-full py-2 text-xs font-bold text-slate-500 hover:text-slate-900 transition">
+          Back to Game Board
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= $100 BUDGET VOTE & TOP 3 TEST MODAL ================= -->
+  <div id="presentationModal" class="fixed inset-0 z-50 bg-[#FFF8E7]/98 backdrop-blur-md hidden flex-col">
+    <div class="p-4 sm:px-8 border-b-[3px] border-slate-800 bg-white flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <span class="text-xl">💰</span>
+        <div>
+          <h2 class="font-pixel text-xs sm:text-sm text-slate-900">$100 BUDGET VOTE & TOP 3 TEST</h2>
+          <p class="text-[11px] font-mono text-slate-600">Spend $100 play-money on your favorites to force tough choices, then test the top 3.</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="px-3 py-1.5 rounded-xl bg-amber-200 border-2 border-slate-800 font-mono text-xs font-extrabold text-slate-900">
+          LEFT TO SPEND: $<span id="dollarRemaining">100</span> / $100
+        </div>
+        <button id="btnShareVoteLink" title="Copy shareable team voting link" class="pixel-btn px-3 py-2 rounded-xl bg-sky-200 hover:bg-sky-300 text-slate-900 text-xs font-extrabold flex items-center gap-1.5">
+          <i class="fa-solid fa-share-nodes text-blue-700"></i>
+          <span class="hidden sm:inline">Share Vote</span>
+        </button>
+        <button id="btnExportPollGraphic" title="Download an A/B/C Poll Image for X, LinkedIn, or YouTube" class="pixel-btn px-3 py-2 rounded-xl bg-purple-200 hover:bg-purple-300 text-slate-900 text-xs font-extrabold flex items-center gap-1.5">
+          <i class="fa-solid fa-image text-purple-700"></i>
+          <span class="hidden sm:inline">Export Poll Graphic</span>
+        </button>
+        <button id="btnRunAbTest" class="pixel-btn px-3.5 py-2 rounded-xl bg-emerald-400 hover:bg-emerald-500 text-slate-900 text-xs font-extrabold flex items-center gap-1.5">
+          <i class="fa-solid fa-tv"></i>
+          <span>Live Feed & Contrast Test</span>
+        </button>
+        <button id="btnClosePresentation" class="pixel-btn w-9 h-9 rounded-xl bg-rose-400 text-white flex items-center justify-center">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-6 sm:p-10 max-w-[1600px] mx-auto w-full space-y-6">
+      <!-- Simulated Top 3 Live Feed & Visual Telemetry Banner -->
+      <div id="abResultsBanner" class="hidden pixel-box p-5 bg-sky-50 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h3 class="font-pixel text-xs text-blue-900 flex items-center gap-2">
+            <i class="fa-solid fa-chart-pie text-blue-600"></i> LIVE FEED PREVIEW & CONTRAST TELEMETRY
+          </h3>
+          <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-white border border-slate-800 text-slate-700">Measured via real luminance contrast, focal alignment & mobile legibility</span>
+        </div>
+        <div id="abResultsGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+
+        <!-- Realistic YouTube / Social Feed Context Strip -->
+        <div class="pt-3 border-t-2 border-sky-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-mono font-extrabold text-slate-800 uppercase"><i class="fa-brands fa-youtube text-rose-600 mr-1"></i> Live Feed Crowded-Scroll Simulation (Top 3 vs. Competing Videos)</span>
+            <span class="text-[10px] font-mono text-slate-500">Check which thumbnail pops first!</span>
+          </div>
+          <div id="liveFeedMockupGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"></div>
+        </div>
+      </div>
+
+      <div id="presentationGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+      <div id="presentationEmpty" class="text-center py-24 space-y-3 hidden">
+        <div class="text-4xl">👾</div>
+        <p class="text-sm font-bold text-slate-600">No favorite cards kept yet! Star some thumbnails first to vote with your $100 budget.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= JAVASCRIPT ENGINE ================= -->
+  <script>
+    /* ====================================================================
+     *  RETRO WEB AUDIO SYNTHESIZER (Zero External Audio URLs)
+     * ==================================================================== */
+    const ArcadeSFX = {
+      enabled: true,
+      ctx: null,
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+      },
+      playTone(freq, type = 'square', duration = 0.08, delay = 0) {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime + delay);
+        gain.gain.setValueAtTime(0.06, this.ctx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + delay + duration);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(this.ctx.currentTime + delay);
+        osc.stop(this.ctx.currentTime + delay + duration);
+      },
+      coin() {
+        this.playTone(987.77, 'square', 0.07, 0);
+        this.playTone(1318.51, 'square', 0.16, 0.07);
+      },
+      pass() {
+        this.playTone(320, 'triangle', 0.08, 0);
+        this.playTone(220, 'triangle', 0.11, 0.06);
+      },
+      spawn() {
+        [330, 440, 554, 659, 880].forEach((f, idx) => this.playTone(f, 'square', 0.07, idx * 0.05));
+      },
+      fanfare() {
+        [523.25, 659.25, 783.99, 1046.5].forEach((f, idx) => this.playTone(f, 'square', 0.12, idx * 0.09));
+      }
+    };
+
+    /* ====================================================================
+     *  CORE STATE & MORPHOLOGICAL MATRIX
+     * ==================================================================== */
+    const DIVERSE_STYLES = [
+      { id: 'film35', tag: '35mm Film', promptSuffix: 'shot on 35mm film, warm sunlight grain, cinematic contrast' },
+      { id: 'swiss', tag: 'Swiss Poster', promptSuffix: 'swiss international typographic poster, bold primary shapes, crisp whitespace' },
+      { id: 'clay', tag: '3D Claymation', promptSuffix: 'tactile stop-motion claymation, bright studio lighting, playful miniature world' },
+      { id: 'brutalist', tag: 'Pop Zine', promptSuffix: 'risograph print zine, halftone dots, bright vibrant ink overprint' },
+      { id: 'vintage90s', tag: '90s Magazine', promptSuffix: 'nostalgic 1990s glossy print ad, crisp studio flash, saturated colors' },
+      { id: 'vector', tag: 'Flat Vector', promptSuffix: 'bold flat editorial vector art, crisp geometric silhouettes' },
+      { id: 'arcade', tag: '16-Bit Art', promptSuffix: 'crisp 16-bit pixel art aesthetic, vibrant sunlit palette' },
+    ];
+
+    const MORPHOLOGICAL_MATRIX = {
+      focalPoints: ['Center Hero', 'Rule-of-Thirds Gaze', 'Extreme Macro', 'Diagonal Split', 'Minimal Island'],
+      lighting: ['Sunlit Hard Shadow', 'Bright Studio Pop', 'Rim Backlight', 'Duotone Wash', 'Warm Golden Hour'],
+      semanticClusters: ['Curiosity Gap', 'Visceral Proof', 'Identity Badge', 'Pain Relief', 'Sensory Pop']
+    };
+
+    const MODULAR_BACKGROUNDS = ['Sunlit Cream Studio', 'Glacial Sky Gradient', 'Pixel Grid Paper', 'Bright White Cyc', 'Warm Coral Pop'];
+    const MODULAR_CTAS = ['GRAB YOURS →', 'TRY ZERO-CRASH', 'UNLOCK FOCUS', 'PLAY NOW', 'LEVEL UP TODAY'];
+
+    const SCAMPER_OPS = [
+      { code: 'SWAP', label: 'Swap Subject', desc: 'Swapped main focal shape for a bold cutout silhouette' },
+      { code: 'MIX', label: 'Mix Layouts', desc: 'Combined before/after split with a close-up product shot' },
+      { code: 'ZOOM', label: 'Zoom In Big', desc: 'Made the main product 2x bigger so it pops on small phone screens' },
+      { code: 'CLEAN', label: 'Remove Clutter', desc: 'Cleared extra background props for a cleaner, bolder look' },
+      { code: 'FLIP', label: 'Invert Colors', desc: 'Swapped light/dark contrast & flipped eye direction' }
+    ];
+
+    const DIVERSE_ANGLES = [
+      { id: 'problem', name: 'Pain Point' },
+      { id: 'reaction', name: 'Visceral Reaction' },
+      { id: 'metaphor', name: 'Visual Metaphor' },
+      { id: 'scale', name: 'Extreme Scale' },
+      { id: 'contrast', name: 'Before/After' },
+    ];
+
+    const SAMPLE_BRIEFS = [
+      "Sparkling glacial cold brew energy can for 2 AM coders beating deadline dread",
+      "Cloud-soft noise-cancelling headphones turning a noisy cafe into peaceful focus",
+      "Featherlight sneakers made from recycled ocean plastic in bright retro colors",
+      "Zero-sugar matcha focus shots that melt afternoon brain fog in 10 minutes"
+    ];
+
+    const state = {
+      brief: '',
+      seedImageBase64: null,
+      seedImageName: '',
+      sketchDataUrl: null,
+      activeSeedTab: 'photo',
+      squintMode: false,
+      mirrorMode: false,
+      fidelity: 'polish', // Default to full AI-style visual render
+      sprintSeconds: 480,
+      sprintRunning: false,
+      sprintInterval: null,
+      ratio: '1:1',
+      customRatio: { w: 9, h: 16 },
+      volume: 24,
+      cards: [],
+      currentFilter: 'all',
+      isGenerating: false,
+      queueIndex: 0,
+      queueActive: false,
+    };
+
+    const DOM = {
+      workspaceSection: document.getElementById('workspaceSection'),
+      mascotSpeech: document.getElementById('mascotSpeech'),
+      playerLevel: document.getElementById('playerLevel'),
+      btnSoundToggle: document.getElementById('btnSoundToggle'),
+      soundIcon: document.getElementById('soundIcon'),
+      btnSprintTimer: document.getElementById('btnSprintTimer'),
+      sprintClock: document.getElementById('sprintClock'),
+      statVariance: document.getElementById('statVariance'),
+      btnToggleSquint: document.getElementById('btnToggleSquint'),
+      btnToggleMirror: document.getElementById('btnToggleMirror'),
+      btnUpgradeFavorites: document.getElementById('btnUpgradeFavorites'),
+      btnReopenSwipe: document.getElementById('btnReopenSwipe'),
+      btnToggleAdvancedConsole: document.getElementById('btnToggleAdvancedConsole'),
+      advancedConsoleDrawer: document.getElementById('advancedConsoleDrawer'),
+      advancedChevron: document.getElementById('advancedChevron'),
+      advancedSummaryBadge: document.getElementById('advancedSummaryBadge'),
+      floatingNextBar: document.getElementById('floatingNextBar'),
+      floatingKeptCount: document.getElementById('floatingKeptCount'),
+      btnFloatingRenderAi: document.getElementById('btnFloatingRenderAi'),
+      btnFloatingVote: document.getElementById('btnFloatingVote'),
+      fidelitySelector: document.getElementById('fidelitySelector'),
+      fidelityLabel: document.getElementById('fidelityLabel'),
+      tabInputPhoto: document.getElementById('tabInputPhoto'),
+      tabInputSketch: document.getElementById('tabInputSketch'),
+      photoInputPanel: document.getElementById('photoInputPanel'),
+      sketchInputPanel: document.getElementById('sketchInputPanel'),
+      lofiSketchCanvas: document.getElementById('lofiSketchCanvas'),
+      btnClearSketch: document.getElementById('btnClearSketch'),
+      inputBrief: document.getElementById('inputBrief'),
+      dropzone: document.getElementById('dropzone'),
+      fileInput: document.getElementById('fileInput'),
+      dropzoneEmpty: document.getElementById('dropzoneEmpty'),
+      dropzonePreview: document.getElementById('dropzonePreview'),
+      seedImgPreview: document.getElementById('seedImgPreview'),
+      seedImgName: document.getElementById('seedImgName'),
+      btnRemoveSeed: document.getElementById('btnRemoveSeed'),
+      ratioSelector: document.getElementById('ratioSelector'),
+      customRatioInputs: document.getElementById('customRatioInputs'),
+      customWidth: document.getElementById('customWidth'),
+      customHeight: document.getElementById('customHeight'),
+      volumeSelector: document.getElementById('volumeSelector'),
+      volumeBadge: document.getElementById('volumeBadge'),
+      btnGenerate: document.getElementById('btnGenerate'),
+      btnQuickSample: document.getElementById('btnQuickSample'),
+      btnLoadDemoDeck: document.getElementById('btnLoadDemoDeck'),
+      gridContainer: document.getElementById('gridContainer'),
+      emptyState: document.getElementById('emptyState'),
+      statTotal: document.getElementById('statTotal'),
+      statKept: document.getElementById('statKept'),
+      tabCountAll: document.getElementById('tabCountAll'),
+      tabCountKept: document.getElementById('tabCountKept'),
+      tabCountKilled: document.getElementById('tabCountKilled'),
+      toast: document.getElementById('toast'),
+      toastMessage: document.getElementById('toastMessage'),
+      generationProgress: document.getElementById('generationProgress'),
+      progressBar: document.getElementById('progressBar'),
+      progressPercent: document.getElementById('progressPercent'),
+      progressText: document.getElementById('progressText'),
+      btnPresentation: document.getElementById('btnPresentation'),
+      btnClosePresentation: document.getElementById('btnClosePresentation'),
+      presentationModal: document.getElementById('presentationModal'),
+      presentationGrid: document.getElementById('presentationGrid'),
+      presentationEmpty: document.getElementById('presentationEmpty'),
+      dollarRemaining: document.getElementById('dollarRemaining'),
+      btnRunAbTest: document.getElementById('btnRunAbTest'),
+      abResultsBanner: document.getElementById('abResultsBanner'),
+      abResultsGrid: document.getElementById('abResultsGrid'),
+      btnExportPrint: document.getElementById('btnExportPrint'),
+      btnExportJson: document.getElementById('btnExportJson'),
+      btnClearCanvas: document.getElementById('btnClearCanvas'),
+      btnShareVoteLink: document.getElementById('btnShareVoteLink'),
+      btnExportPollGraphic: document.getElementById('btnExportPollGraphic'),
+      liveFeedMockupGrid: document.getElementById('liveFeedMockupGrid'),
+      autoQueueModal: document.getElementById('autoQueueModal'),
+      btnCloseQueue: document.getElementById('btnCloseQueue'),
+      btnQueueMirror: document.getElementById('btnQueueMirror'),
+      queueProgressBadge: document.getElementById('queueProgressBadge'),
+      swipeCardContainer: document.getElementById('swipeCardContainer'),
+      swipeCard: document.getElementById('swipeCard'),
+      swipeCardAspectWrap: document.getElementById('swipeCardAspectWrap'),
+      swipeCardImg: document.getElementById('swipeCardImg'),
+      swipeWarmupBadge: document.getElementById('swipeWarmupBadge'),
+      swipeCardStyle: document.getElementById('swipeCardStyle'),
+      swipeCardCluster: document.getElementById('swipeCardCluster'),
+      swipeCardRatio: document.getElementById('swipeCardRatio'),
+      swipeCardHeadline: document.getElementById('swipeCardHeadline'),
+      swipeCardDesc: document.getElementById('swipeCardDesc'),
+      stampKeep: document.getElementById('stampKeep'),
+      stampKill: document.getElementById('stampKill'),
+      btnQueueUndo: document.getElementById('btnQueueUndo'),
+      btnQueueKeep: document.getElementById('btnQueueKeep'),
+      btnQueueKill: document.getElementById('btnQueueKill'),
+      deckCompleteModal: document.getElementById('deckCompleteModal'),
+      completeKeptCount: document.getElementById('completeKeptCount'),
+      completeKilledCount: document.getElementById('completeKilledCount'),
+      completeVarianceScore: document.getElementById('completeVarianceScore'),
+      btnCompletePromote: document.getElementById('btnCompletePromote'),
+      btnCompleteDollarTest: document.getElementById('btnCompleteDollarTest'),
+      btnCompleteClose: document.getElementById('btnCompleteClose'),
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      bindEvents();
+      bindDragAndDrop();
+      initLofiSketchpad();
+      initSwipeMechanics();
+      loadSharedVoteFromUrl();
+      renderStats();
+    });
+
+    function updateMascotLine(text) {
+      if (DOM.mascotSpeech) DOM.mascotSpeech.textContent = `"${text}"`;
+    }
+
+    /* ====================================================================
+     *  LO-FI SKETCHPAD INITIALIZATION
+     * ==================================================================== */
+    function initLofiSketchpad() {
+      const canvas = DOM.lofiSketchCanvas;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let drawing = false;
+
+      const drawGrid = () => {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#E2E8F0';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(canvas.width / 3, 0); ctx.lineTo(canvas.width / 3, canvas.height);
+        ctx.moveTo((canvas.width * 2) / 3, 0); ctx.lineTo((canvas.width * 2) / 3, canvas.height);
+        ctx.moveTo(0, canvas.height / 3); ctx.lineTo(canvas.width, canvas.height / 3);
+        ctx.moveTo(0, (canvas.height * 2) / 3); ctx.lineTo(canvas.width, (canvas.height * 2) / 3);
+        ctx.stroke();
+      };
+      drawGrid();
+
+      const getPos = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+          x: ((clientX - rect.left) / rect.width) * canvas.width,
+          y: ((clientY - rect.top) / rect.height) * canvas.height
+        };
+      };
+
+      const startDraw = (e) => {
+        drawing = true;
+        const pos = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+      };
+
+      const moveDraw = (e) => {
+        if (!drawing) return;
+        const pos = getPos(e);
+        ctx.strokeStyle = '#1E293B';
+        ctx.lineWidth = 5;
+        ctx.lineCap = 'round';
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        state.sketchDataUrl = canvas.toDataURL('image/png');
+      };
+
+      const endDraw = () => { drawing = false; };
+
+      canvas.addEventListener('mousedown', startDraw);
+      canvas.addEventListener('mousemove', moveDraw);
+      window.addEventListener('mouseup', endDraw);
+      canvas.addEventListener('touchstart', startDraw, { passive: true });
+      canvas.addEventListener('touchmove', moveDraw, { passive: true });
+      canvas.addEventListener('touchend', endDraw);
+
+      DOM.btnClearSketch.addEventListener('click', () => {
+        drawGrid();
+        state.sketchDataUrl = null;
+        ArcadeSFX.pass();
+      });
+    }
+
+    /* ====================================================================
+     *  EVENT BINDINGS
+     * ==================================================================== */
+    function bindEvents() {
+      DOM.btnSoundToggle.addEventListener('click', () => {
+        ArcadeSFX.enabled = !ArcadeSFX.enabled;
+        DOM.soundIcon.className = ArcadeSFX.enabled
+          ? 'fa-solid fa-volume-high text-blue-600'
+          : 'fa-solid fa-volume-xmark text-slate-400';
+        if (ArcadeSFX.enabled) ArcadeSFX.coin();
+      });
+
+      DOM.btnSprintTimer.addEventListener('click', () => {
+        if (state.sprintRunning) {
+          clearInterval(state.sprintInterval);
+          state.sprintRunning = false;
+          DOM.btnSprintTimer.classList.remove('animate-pulse');
+          showToast('Sprint timer paused.');
+        } else {
+          state.sprintRunning = true;
+          DOM.btnSprintTimer.classList.add('animate-pulse');
+          ArcadeSFX.coin();
+          updateMascotLine("Speed run active! Don't overthink—pure volume!");
+          showToast('8-Minute Arcade Sprint started!');
+          state.sprintInterval = setInterval(() => {
+            if (state.sprintSeconds <= 0) {
+              clearInterval(state.sprintInterval);
+              state.sprintRunning = false;
+              DOM.btnSprintTimer.classList.remove('animate-pulse');
+              ArcadeSFX.fanfare();
+              showToast('Time up! Pick your champion thumbnails.');
+              return;
+            }
+            state.sprintSeconds--;
+            const m = String(Math.floor(state.sprintSeconds / 60)).padStart(2, '0');
+            const s = String(state.sprintSeconds % 60).padStart(2, '0');
+            DOM.sprintClock.textContent = `${m}:${s}`;
+          }, 1000);
+        }
+      });
+
+      DOM.btnToggleSquint.addEventListener('click', () => {
+        state.squintMode = !state.squintMode;
+        DOM.workspaceSection.classList.toggle('squint-mode', state.squintMode);
+        DOM.btnToggleSquint.classList.toggle('bg-amber-300', state.squintMode);
+        ArcadeSFX.coin();
+        showToast(state.squintMode ? 'Tiny Phone Check ON: Checking small-screen clarity!' : 'Full Card View restored.');
+      });
+
+      const toggleMirror = () => {
+        state.mirrorMode = !state.mirrorMode;
+        document.body.classList.toggle('mirror-mode', state.mirrorMode);
+        DOM.btnToggleMirror.classList.toggle('bg-amber-300', state.mirrorMode);
+        if (DOM.btnQueueMirror) DOM.btnQueueMirror.classList.toggle('bg-amber-300', state.mirrorMode);
+        ArcadeSFX.coin();
+        showToast(state.mirrorMode ? 'Flipped left-to-right to check layout balance!' : 'Original orientation restored.');
+      };
+
+      DOM.btnToggleMirror.addEventListener('click', toggleMirror);
+      if (DOM.btnQueueMirror) DOM.btnQueueMirror.addEventListener('click', toggleMirror);
+
+      DOM.btnUpgradeFavorites.addEventListener('click', upgradeFavoritesWithRealAI);
+      if (DOM.btnFloatingRenderAi) DOM.btnFloatingRenderAi.addEventListener('click', upgradeFavoritesWithRealAI);
+      if (DOM.btnFloatingVote) DOM.btnFloatingVote.addEventListener('click', openPresentationMode);
+      if (DOM.btnReopenSwipe) {
+        DOM.btnReopenSwipe.addEventListener('click', () => {
+          if (state.cards.length === 0) return;
+          openAutoQueue(state.cards);
+        });
+      }
+      if (DOM.btnToggleAdvancedConsole) {
+        DOM.btnToggleAdvancedConsole.addEventListener('click', () => {
+          DOM.advancedConsoleDrawer.classList.toggle('hidden');
+          DOM.advancedChevron.classList.toggle('rotate-180');
+        });
+      }
+
+      // Platform Presets
+      document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const preset = btn.dataset.preset;
+          const map = {
+            youtube: { ratio: '16:9', vol: 24, label: 'YouTube 16:9 (24 cards)' },
+            meta: { ratio: '4:5', vol: 24, label: 'Meta/IG 4:5 (24 cards)' },
+            tiktok: { ratio: 'custom', w: 9, h: 16, vol: 24, label: 'Shorts/TikTok 9:16 (24 cards)' },
+            storyboard: { ratio: '16:9', vol: 24, label: 'Animation Storyboard (24 frames)' }
+          };
+          const cfg = map[preset];
+          if (!cfg) return;
+          if (cfg.ratio === 'custom') {
+            state.ratio = 'custom';
+            state.customRatio = { w: cfg.w, h: cfg.h };
+            DOM.customWidth.value = cfg.w;
+            DOM.customHeight.value = cfg.h;
+            DOM.customRatioInputs.classList.remove('hidden');
+          } else {
+            state.ratio = cfg.ratio;
+            DOM.customRatioInputs.classList.add('hidden');
+          }
+          DOM.ratioSelector.querySelectorAll('.ratio-btn').forEach(b => {
+            const active = b.dataset.ratio === state.ratio;
+            b.className = active
+              ? 'ratio-btn py-2 px-1 bg-amber-300 border-2 border-slate-800 text-slate-900 rounded-lg text-xs font-mono font-bold flex flex-col items-center gap-1'
+              : 'ratio-btn py-2 px-1 bg-cream-100 border-2 border-slate-300 text-slate-600 hover:border-slate-800 rounded-lg text-xs font-mono font-bold flex flex-col items-center gap-1';
+          });
+          state.volume = cfg.vol;
+          DOM.volumeBadge.textContent = `${state.volume} Cards`;
+          if (DOM.advancedSummaryBadge) DOM.advancedSummaryBadge.textContent = `${getActiveRatioLabel()} • ${state.volume}`;
+          DOM.btnGenerate.querySelector('span').textContent = `SPAWN ${state.volume} IDEAS!`;
+          ArcadeSFX.coin();
+          showToast(`Preset active: ${cfg.label}`);
+        });
+      });
+
+      DOM.tabInputPhoto.addEventListener('click', () => {
+        state.activeSeedTab = 'photo';
+        DOM.tabInputPhoto.className = 'px-2 py-0.5 rounded bg-amber-300 text-slate-900';
+        DOM.tabInputSketch.className = 'px-2 py-0.5 rounded text-slate-600 hover:text-slate-900';
+        DOM.photoInputPanel.classList.remove('hidden');
+        DOM.sketchInputPanel.classList.add('hidden');
+      });
+
+      DOM.tabInputSketch.addEventListener('click', () => {
+        state.activeSeedTab = 'sketch';
+        DOM.tabInputSketch.className = 'px-2 py-0.5 rounded bg-amber-300 text-slate-900';
+        DOM.tabInputPhoto.className = 'px-2 py-0.5 rounded text-slate-600 hover:text-slate-900';
+        DOM.sketchInputPanel.classList.remove('hidden');
+        DOM.photoInputPanel.classList.add('hidden');
+      });
+
+      DOM.btnQuickSample.addEventListener('click', () => {
+        const pick = SAMPLE_BRIEFS[Math.floor(Math.random() * SAMPLE_BRIEFS.length)];
+        DOM.inputBrief.value = pick;
+        state.brief = pick;
+        ArcadeSFX.coin();
+        updateMascotLine("Quest loaded! Smash SPAWN to generate cards!");
+        showToast('Quest sample loaded!');
+      });
+
+      DOM.ratioSelector.querySelectorAll('.ratio-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          DOM.ratioSelector.querySelectorAll('.ratio-btn').forEach(b => {
+            b.className = 'ratio-btn py-2 px-1 bg-cream-100 border-2 border-slate-300 text-slate-600 hover:border-slate-800 rounded-lg text-xs font-mono font-bold flex flex-col items-center gap-1';
+          });
+          btn.className = 'ratio-btn py-2 px-1 bg-amber-300 border-2 border-slate-800 text-slate-900 rounded-lg text-xs font-mono font-bold flex flex-col items-center gap-1';
+          state.ratio = btn.dataset.ratio;
+          DOM.customRatioInputs.classList.toggle('hidden', state.ratio !== 'custom');
+          ArcadeSFX.coin();
+        });
+      });
+
+      DOM.customWidth.addEventListener('input', () => {
+        state.customRatio.w = Math.max(1, parseInt(DOM.customWidth.value, 10) || 9);
+      });
+      DOM.customHeight.addEventListener('input', () => {
+        state.customRatio.h = Math.max(1, parseInt(DOM.customHeight.value, 10) || 16);
+      });
+
+      DOM.volumeSelector.querySelectorAll('.vol-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          DOM.volumeSelector.querySelectorAll('.vol-btn').forEach(b => {
+            b.className = 'vol-btn py-1.5 rounded-lg text-xs font-mono font-bold border-2 border-slate-300 bg-cream-100 text-slate-600 hover:border-slate-800';
+          });
+          btn.className = 'vol-btn py-1.5 rounded-lg text-xs font-mono font-bold border-2 border-slate-800 bg-amber-300 text-slate-900';
+          state.volume = parseInt(btn.dataset.vol, 10);
+          DOM.volumeBadge.textContent = `${state.volume} Cards`;
+          if (DOM.advancedSummaryBadge) DOM.advancedSummaryBadge.textContent = `${getActiveRatioLabel()} • ${state.volume}`;
+          DOM.btnGenerate.querySelector('span').textContent = `SPAWN ${state.volume} IDEAS!`;
+          ArcadeSFX.coin();
+        });
+      });
+
+      DOM.btnGenerate.addEventListener('click', generateBatch);
+
+      document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.filter-tab').forEach(t => {
+            t.classList.remove('active', 'bg-amber-300', 'text-slate-900');
+            t.classList.add('text-slate-600');
+          });
+          tab.classList.add('active', 'bg-amber-300', 'text-slate-900');
+          tab.classList.remove('text-slate-600');
+          state.currentFilter = tab.dataset.filter;
+          renderCards();
+        });
+      });
+
+      DOM.btnPresentation.addEventListener('click', openPresentationMode);
+      DOM.btnClosePresentation.addEventListener('click', closePresentationMode);
+      if (DOM.btnRunAbTest) DOM.btnRunAbTest.addEventListener('click', runWatchTimeAbSimulation);
+      if (DOM.btnShareVoteLink) DOM.btnShareVoteLink.addEventListener('click', copyShareableVoteLink);
+      if (DOM.btnExportPollGraphic) DOM.btnExportPollGraphic.addEventListener('click', exportSocialPollGraphic);
+      if (DOM.btnLoadDemoDeck) DOM.btnLoadDemoDeck.addEventListener('click', loadLiveDemoDeck);
+      DOM.btnExportPrint.addEventListener('click', () => window.print());
+      DOM.btnExportJson.addEventListener('click', exportFigmaManifest);
+      DOM.btnClearCanvas.addEventListener('click', () => {
+        state.cards = [];
+        ArcadeSFX.pass();
+        renderCards();
+        renderStats();
+        updateMascotLine("Board cleared! Ready for a fresh run.");
+        showToast('Cartridge reset.');
+      });
+
+      DOM.btnCloseQueue.addEventListener('click', closeAutoQueue);
+      if (DOM.btnQueueUndo) DOM.btnQueueUndo.addEventListener('click', undoSwipeDecision);
+      DOM.btnQueueKeep.addEventListener('click', () => commitSwipeDecision('kept'));
+      DOM.btnQueueKill.addEventListener('click', () => commitSwipeDecision('killed'));
+
+      if (DOM.btnCompletePromote) {
+        DOM.btnCompletePromote.addEventListener('click', () => {
+          DOM.deckCompleteModal.classList.add('hidden');
+          DOM.deckCompleteModal.classList.remove('flex');
+          DOM.btnUpgradeFavorites.click();
+        });
+      }
+      if (DOM.btnCompleteDollarTest) {
+        DOM.btnCompleteDollarTest.addEventListener('click', () => {
+          DOM.deckCompleteModal.classList.add('hidden');
+          DOM.deckCompleteModal.classList.remove('flex');
+          openPresentationMode();
+        });
+      }
+      DOM.btnCompleteClose.addEventListener('click', () => {
+        DOM.deckCompleteModal.classList.add('hidden');
+        DOM.deckCompleteModal.classList.remove('flex');
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if (!state.queueActive) return;
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          commitSwipeDecision('kept');
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          commitSwipeDecision('killed');
+        } else if (e.key.toLowerCase() === 'z') {
+          e.preventDefault();
+          undoSwipeDecision();
+        } else if (e.key === 'Escape') {
+          closeAutoQueue();
+        }
+      });
+    }
+
+    /* ====================================================================
+     *  GENERATION ENGINE (PROMPT-ACCURATE AI-STYLE VISUAL SCENES)
+     * ==================================================================== */
+    function getActiveRatioLabel() {
+      return state.ratio === 'custom'
+        ? `${state.customRatio.w}:${state.customRatio.h}`
+        : state.ratio;
+    }
+
+    // Parse exact subjects, materials, settings, and moods directly from the user's prompt
+    function parsePromptDetails(brief) {
+      const raw = (brief || '').trim();
+      const lower = raw.toLowerCase();
+
+      // Extract clean core subject phrase
+      const cleanSubject = raw.replace(/[^\w\s,'-]/g, '').trim() || 'Artisanal Sculptural Piece';
+
+      // Subject taxonomy detector
+      let subjectType = 'sculpture';
+      if (/\b(wire|wireframe|copper wire|metal wire|mesh|bending wire|twisted wire)\b/.test(lower)) {
+        subjectType = 'wire_sculpture';
+      } else if (/\b(sculpture|statue|bust|figurine|ceramic|clay|pottery|marble)\b/.test(lower)) {
+        subjectType = 'sculpture';
+      } else if (/\b(can|bottle|drink|coffee|brew|matcha|tea|soda|juice|cup|mug|glass)\b/.test(lower)) {
+        subjectType = 'beverage';
+      } else if (/\b(headphone|earbud|speaker|synth|keyboard|camera|phone|laptop|watch|gadget)\b/.test(lower)) {
+        subjectType = 'tech_gear';
+      } else if (/\b(sneaker|shoe|boot|jacket|bag|hat|glasses|fashion|apparel)\b/.test(lower)) {
+        subjectType = 'apparel';
+      } else if (/\b(cat|dog|bird|fox|owl|dragon|fish|whale|butterfly|animal|wolf|bear)\b/.test(lower)) {
+        subjectType = 'creature';
+      } else if (/\b(plant|flower|tree|bonsai|mushroom|forest|garden|leaf|floral)\b/.test(lower)) {
+        subjectType = 'botanical';
+      } else if (/\b(car|bike|bicycle|motorcycle|spaceship|rocket|boat|train|plane)\b/.test(lower)) {
+        subjectType = 'vehicle';
+      }
+
+      // Secondary sub-subject modifiers (e.g., "wire sculpture of a face / bird / hand / tree / horse / abstract")
+      let wireForm = 'abstract_figure';
+      if (/\b(face|head|portrait|person|human|dancer|figure|body|woman|man)\b/.test(lower)) wireForm = 'human_portrait';
+      else if (/\b(hand|hands|finger)\b/.test(lower)) wireForm = 'hand';
+      else if (/\b(bird|eagle|owl|crow|crane|butterfly|wing)\b/.test(lower)) wireForm = 'bird';
+      else if (/\b(tree|bonsai|branch|flower|plant|leaf)\b/.test(lower)) wireForm = 'tree';
+      else if (/\b(cat|dog|wolf|horse|stag|deer|lion|animal)\b/.test(lower)) wireForm = 'animal';
+
+      // Material & surface finish detector
+      let material = 'studio';
+      if (/\b(copper|bronze|rose gold)\b/.test(lower)) material = 'copper';
+      else if (/\b(gold|brass|gilded)\b/.test(lower)) material = 'gold';
+      else if (/\b(silver|steel|chrome|aluminum|iron|wire|metal)\b/.test(lower)) material = 'silver_wire';
+      else if (/\b(glass|crystal|ice|glacial|transparent)\b/.test(lower)) material = 'glass';
+      else if (/\b(wood|wooden|oak|bamboo)\b/.test(lower)) material = 'wood';
+      else if (/\b(neon|glow|led|cyber|holographic)\b/.test(lower)) material = 'neon';
+
+      // Environment / Setting detector
+      let setting = 'gallery_pedestal';
+      if (/\b(desk|workspace|studio|table|workshop|bench|tool)\b/.test(lower)) setting = 'workshop_desk';
+      else if (/\b(forest|nature|outdoor|mountain|ocean|beach|sunlight|garden)\b/.test(lower)) setting = 'outdoor_nature';
+      else if (/\b(night|2am|dark|neon|city|street|cyber)\b/.test(lower)) setting = 'night_studio';
+      else if (/\b(minimal|white|clean|gallery|museum|pedestal)\b/.test(lower)) setting = 'gallery_pedestal';
+
+      return { raw, cleanSubject, subjectType, wireForm, material, setting };
+    }
+
+    function generateHookHeadline(brief, angle) {
+      const parsed = parsePromptDetails(brief);
+      const subj = parsed.cleanSubject;
+      const scenes = [
+        `Close-up gallery shot of "${subj}" with dramatic rim lighting and crisp depth of field`,
+        `Artist workshop view featuring "${subj}" illuminated by warm directional studio rays`,
+        `Macro detail capture of "${subj}" showing intricate texture, form, and shadow play`,
+        `Architectural pedestal showcase of "${subj}" set against an atmospheric backdrop`,
+        `Dynamic 3/4 angle render of "${subj}" with natural specular highlights`
+      ];
+      const idx = Math.abs((angle.id.charCodeAt(0) + Math.floor(Math.random() * 10))) % scenes.length;
+      return scenes[idx];
+    }
+
+    function setGlobalFidelity(stage, rerenderAll = true) {
+      state.fidelity = stage;
+      const labels = {
+        notan: 'Monochrome',
+        study: 'Vibrant AI',
+        polish: 'Full AI Scene'
+      };
+      DOM.fidelityLabel.textContent = labels[stage] || labels.polish;
+      DOM.fidelitySelector.querySelectorAll('.fidelity-btn').forEach(b => {
+        const active = b.dataset.fidelity === stage;
+        b.className = active
+          ? 'fidelity-btn py-1.5 px-1 rounded-lg text-[10px] font-mono font-bold border-2 border-slate-800 bg-amber-300 text-slate-900'
+          : 'fidelity-btn py-1.5 px-1 rounded-lg text-[10px] font-mono font-bold border-2 border-slate-300 bg-cream-100 text-slate-600 hover:border-slate-800';
+      });
+      if (rerenderAll && state.cards.length > 0) {
+        state.cards.forEach(c => {
+          c.fidelity = stage;
+          c.svgPlaceholder = generateDynamicSVG(c);
+        });
+        renderCards();
+      }
+    }
+
+    function generateDynamicSVG(card) {
+      const stage = card.fidelity || state.fidelity || 'polish';
+      const parsed = parsePromptDetails(card.briefText);
+
+      // Material-driven metallic & atmospheric color palettes
+      const materialPalettes = {
+        copper: { sky1: '#1C1412', sky2: '#442C24', glow: '#FED7AA', core: '#D97706', rim: '#FB923C', wire: '#FDBA74', wireDark: '#9A3412', ground: '#18110E' },
+        gold: { sky1: '#1A160B', sky2: '#423513', glow: '#FEF08A', core: '#EAB308', rim: '#FDE047', wire: '#FEF08A', wireDark: '#A16207', ground: '#141108' },
+        silver_wire: { sky1: '#0F172A', sky2: '#334155', glow: '#F8FAFC', core: '#94A3B8', rim: '#E2E8F0', wire: '#F1F5F9', wireDark: '#475569', ground: '#090D16' },
+        glass: { sky1: '#0C4A6E', sky2: '#0284C7', glow: '#E0F2FE', core: '#38BDF8', rim: '#BAE6FD', wire: '#E0F2FE', wireDark: '#0369A1', ground: '#082F49' },
+        wood: { sky1: '#271A12', sky2: '#5C3D28', glow: '#FDE68A', core: '#B45309', rim: '#F59E0B', wire: '#FCD34D', wireDark: '#78350F', ground: '#1C120C' },
+        neon: { sky1: '#090D16', sky2: '#2E1065', glow: '#F0ABFC', core: '#EC4899', rim: '#22D3EE', wire: '#38BDF8', wireDark: '#A21CAF', ground: '#05070D' },
+        studio: { sky1: '#1E293B', sky2: '#475569', glow: '#FEF3C7', core: '#3B82F6', rim: '#F59E0B', wire: '#F8FAFC', wireDark: '#64748B', ground: '#0F172A' }
+      };
+
+      const monoPalette = { sky1: '#09090B', sky2: '#3F3F46', glow: '#FAFAFA', core: '#71717A', rim: '#FFFFFF', wire: '#F4F4F5', wireDark: '#52525B', ground: '#18181B' };
+      const p = stage === 'notan' ? monoPalette : (materialPalettes[parsed.material] || materialPalettes.studio);
+
+      const uid = `${card.index}_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+      const seed = (card.index + 1) * 73;
+      const scaleBoost = card.scamper?.code === 'ZOOM' ? 1.25 : 1;
+      const variant = card.index % 4;
+
+      // Pedestal & Studio Shadow Base shared by sculptural scenes
+      const pedestalSVG = `
+        <ellipse cx="0" cy="118" rx="95" ry="18" fill="#000000" opacity="0.5" filter="url(#softBlur_${uid})"/>
+        <ellipse cx="0" cy="108" rx="74" ry="15" fill="url(#coreGrad_${uid})" stroke="${p.rim}" stroke-width="1.5"/>
+        <rect x="-74" y="108" width="148" height="42" fill="url(#pedestalGrad_${uid})"/>
+        <ellipse cx="0" cy="150" rx="74" ry="15" fill="${p.ground}"/>
+      `;
+
+      // Render prompt-specific visual subjects!
+      let subjectSVG = '';
+
+      if (parsed.subjectType === 'wire_sculpture' || parsed.subjectType === 'sculpture') {
+        // Explicit, intricate twisted metallic wire sculpture variations!
+        const formChoice = parsed.wireForm !== 'abstract_figure'
+          ? parsed.wireForm
+          : ['human_portrait', 'bird', 'tree', 'abstract_figure'][variant];
+
+        if (formChoice === 'human_portrait') {
+          // Continuous-line & mesh wire head/bust sculpture on a gallery plinth
+          subjectSVG = `
+            <g transform="translate(200, 195) scale(${scaleBoost})">
+              ${pedestalSVG}
+              <!-- Cast wire shadow on backdrop -->
+              <g transform="translate(18, 6)" opacity="0.28" stroke="#000000" fill="none" stroke-width="3">
+                <path d="M -32 95 C -35 55, -52 25, -48 -22 C -45 -72, 45 -72, 48 -22 C 52 25, 35 55, 32 95"/>
+                <path d="M -25 -25 Q 0 -42 25 -25 Q 0 12 -25 -25"/>
+              </g>
+              <!-- Outer Contour Wire Frame -->
+              <g fill="none" stroke="url(#wireGrad_${uid})" stroke-linecap="round" stroke-linejoin="round">
+                <!-- Neck & Shoulders Wire Loops -->
+                <path d="M -48 106 C -42 78, -22 72, -18 46 M 48 106 C 42 78, 22 72, 18 46" stroke-width="3.8"/>
+                <ellipse cx="0" cy="84" rx="44" ry="13" stroke-width="2.2" opacity="0.8"/>
+                <ellipse cx="0" cy="64" rx="22" ry="7" stroke-width="2" opacity="0.75"/>
+                <!-- Sculpted Cranium & Jawline Continuous Wire -->
+                <path d="M -20 48 C -44 35, -54 -5, -48 -42 C -42 -82, 42 -82, 48 -42 C 54 -5, 44 35, 20 48 C 8 55, -8 55, -20 48 Z" stroke-width="4"/>
+                <!-- Contour Latitude Wire Rings (3D Wire Mesh Effect) -->
+                <path d="M -47 -32 Q 0 -18 47 -32" stroke-width="2" opacity="0.85"/>
+                <path d="M -49 -8 Q 0 8 49 -8" stroke-width="2" opacity="0.85"/>
+                <path d="M -42 18 Q 0 32 42 18" stroke-width="2" opacity="0.8"/>
+                <path d="M 0 -72 C -12 -30, -12 15, 0 53" stroke-width="2.2" opacity="0.85"/>
+                <path d="M 0 -72 C 14 -30, 14 15, 0 53" stroke-width="1.8" opacity="0.7"/>
+                <!-- Expressive Single-Line Nose, Brow & Eyes -->
+                <path d="M -32 -22 Q -18 -30 -6 -20 L -8 6 Q 0 12 7 7" stroke-width="3.2"/>
+                <path d="M 8 -20 Q 20 -30 33 -22" stroke-width="3"/>
+                <ellipse cx="-19" cy="-16" rx="8" ry="4.5" stroke-width="2.4"/>
+                <ellipse cx="19" cy="-16" rx="8" ry="4.5" stroke-width="2.4"/>
+                <path d="M -14 26 Q 0 33 14 26 Q 0 23 -14 26" stroke-width="2.5"/>
+                <!-- Crown Coiled Wire Loops -->
+                <path d="M -36 -56 C -22 -94, 18 -96, 34 -58" stroke-width="2.5" opacity="0.9"/>
+                <path d="M -26 -66 C -10 -102, 26 -92, 40 -48" stroke-width="1.8" opacity="0.7"/>
+              </g>
+            </g>`;
+        } else if (formChoice === 'bird') {
+          // Soaring Twisted Wire Bird / Crane Sculpture with Ribbed Wire Wings
+          subjectSVG = `
+            <g transform="translate(200, 195) scale(${scaleBoost})">
+              ${pedestalSVG}
+              <g fill="none" stroke="url(#wireGrad_${uid})" stroke-linecap="round" stroke-linejoin="round">
+                <!-- Support Brass/Steel Mounting Rod -->
+                <line x1="0" y1="106" x2="0" y2="18" stroke-width="3.5"/>
+                <!-- Sweeping Left & Right Wire Wings -->
+                <path d="M -6 8 C -45 -45, -105 -65, -138 -32 C -105 -12, -62 5, -10 22" stroke-width="3.8"/>
+                <path d="M -14 12 C -52 -28, -96 -42, -124 -18" stroke-width="2" opacity="0.85"/>
+                <path d="M -16 17 C -50 -12, -84 -20, -106 -4" stroke-width="1.8" opacity="0.75"/>
+                <path d="M 6 8 C 45 -45, 105 -65, 138 -32 C 105 -12, 62 5, 10 22" stroke-width="3.8"/>
+                <path d="M 14 12 C 52 -28, 96 -42, 124 -18" stroke-width="2" opacity="0.85"/>
+                <path d="M 16 17 C 50 -12, 84 -20, 106 -4" stroke-width="1.8" opacity="0.75"/>
+                <!-- Coiled Wire Torso, Crane Neck & Tail Feathers -->
+                <ellipse cx="0" cy="14" rx="22" ry="12" transform="rotate(-18 0 14)" stroke-width="3"/>
+                <ellipse cx="0" cy="14" rx="15" ry="8" transform="rotate(14 0 14)" stroke-width="2" opacity="0.8"/>
+                <path d="M 14 6 C 32 -18, 28 -58, 46 -72 L 68 -66 L 45 -60" stroke-width="3.5"/>
+                <path d="M -18 22 C -46 42, -68 65, -82 78 M -16 25 C -38 48, -54 72, -64 86" stroke-width="2.4"/>
+              </g>
+            </g>`;
+        } else if (formChoice === 'tree') {
+          // Twisted Wire Bonsai Tree Sculpture with Coiled Roots & Canopy Loops
+          subjectSVG = `
+            <g transform="translate(200, 195) scale(${scaleBoost})">
+              ${pedestalSVG}
+              <g fill="none" stroke="url(#wireGrad_${uid})" stroke-linecap="round">
+                <!-- Twisted Multi-Strand Wire Trunk & Roots -->
+                <path d="M -42 106 C -22 92, -12 72, -8 24 C -4 -10, -28 -32, -55 -48" stroke-width="4.2"/>
+                <path d="M 44 106 C 24 90, 12 72, 8 24 C 5 -12, 32 -36, 58 -52" stroke-width="4.2"/>
+                <path d="M -18 108 C -6 82, 4 56, 0 16 C -2 -18, 8 -46, 4 -76" stroke-width="3.5"/>
+                <path d="M 16 108 C 8 84, -6 52, 2 18" stroke-width="2.5" opacity="0.85"/>
+                <!-- Delicate Coiled Wire Foliage Clouds -->
+                <ellipse cx="-58" cy="-52" rx="36" ry="16" stroke-width="2.4"/>
+                <ellipse cx="-54" cy="-54" rx="26" ry="10" stroke-width="1.6" opacity="0.8"/>
+                <ellipse cx="58" cy="-56" rx="38" ry="17" stroke-width="2.4"/>
+                <ellipse cx="54" cy="-58" rx="26" ry="10" stroke-width="1.6" opacity="0.8"/>
+                <ellipse cx="2" cy="-82" rx="46" ry="20" stroke-width="2.6"/>
+                <ellipse cx="4" cy="-84" rx="32" ry="12" stroke-width="1.6" opacity="0.85"/>
+              </g>
+            </g>`;
+        } else {
+        // Dynamic multi-element prompt-driven scene composition (no generic single crystal)
+        const words = parsed.cleanSubject.split(/\s+/).filter(w => w.length > 2);
+        const seedHash = words.join('').split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0) + card.index * 31;
+        const orbCount = 3 + (seedHash % 3);
+        let dynamicShapes = '';
+        for (let k = 0; k < orbCount; k++) {
+          const angleRad = ((seedHash + k * 95) % 360) * (Math.PI / 180);
+          const dist = 28 + ((seedHash * (k + 2)) % 56);
+          const cx = Math.round(Math.cos(angleRad) * dist);
+          const cy = Math.round(Math.sin(angleRad) * dist * 0.75);
+          const r = 22 + ((seedHash + k * 19) % 34);
+          if (k % 2 === 0) {
+            dynamicShapes += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#coreGrad_${uid})" stroke="${p.rim}" stroke-width="2.2" opacity="0.92"/>`;
+          } else {
+            dynamicShapes += `<rect x="${cx - r}" y="${cy - r * 0.7}" width="${r * 2}" height="${r * 1.4}" rx="12" transform="rotate(${(seedHash + k * 25) % 45} ${cx} ${cy})" fill="url(#rimGrad_${uid})" stroke="${p.glow}" stroke-width="2" opacity="0.88"/>`;
+          }
+        }
+        subjectSVG = `
+          <g transform="translate(200, 195) scale(${scaleBoost})">
+            ${pedestalSVG}
+            ${dynamicShapes}
+            <ellipse cx="0" cy="-4" rx="115" ry="34" fill="none" stroke="${p.glow}" stroke-width="2.2" transform="rotate(${-18 + (variant * 12)})"/>
+          </g>`;
+      }
+      }
+
+      // Optional user seed photo OR sketchpad blueprint blended directly into the render
+      const seedBlendLayer = state.seedImageBase64
+        ? `<image href="${state.seedImageBase64}" x="0" y="0" width="400" height="400" preserveAspectRatio="xMidYMid slice" opacity="0.34" style="mix-blend-mode: luminosity;"/>`
+        : state.sketchDataUrl
+          ? `<image href="${state.sketchDataUrl}" x="20" y="20" width="360" height="360" preserveAspectRatio="xMidYMid meet" opacity="0.28" style="mix-blend-mode: screen;"/>`
+          : '';
+
+      const sunX = 95 + (seed % 210);
+      const sunY = 70 + ((seed * 3) % 100);
+
+      let bokehParticles = '';
+      for (let b = 0; b < 12; b++) {
+        const bx = ((seed * (b + 3) * 19) % 380) + 10;
+        const by = ((seed * (b + 7) * 29) % 340) + 20;
+        const br = 2 + ((b * 4) % 10);
+        const bop = (0.14 + ((b % 4) * 0.1)).toFixed(2);
+        bokehParticles += `<circle cx="${bx}" cy="${by}" r="${br}" fill="${b % 2 === 0 ? p.glow : p.rim}" opacity="${bop}" filter="url(#softBlur_${uid})"/>`;
+      }
+
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+          <defs>
+            <linearGradient id="skyGrad_${uid}" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="${p.sky1}"/>
+              <stop offset="60%" stop-color="${p.sky2}"/>
+              <stop offset="100%" stop-color="${p.ground}"/>
+            </linearGradient>
+            <radialGradient id="glowGrad_${uid}" cx="50%" cy="38%" r="55%">
+              <stop offset="0%" stop-color="${p.glow}" stop-opacity="0.85"/>
+              <stop offset="55%" stop-color="${p.rim}" stop-opacity="0.28"/>
+              <stop offset="100%" stop-color="${p.sky1}" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="coreGrad_${uid}" x1="15%" y1="10%" x2="85%" y2="90%">
+              <stop offset="0%" stop-color="${p.glow}"/>
+              <stop offset="48%" stop-color="${p.core}"/>
+              <stop offset="100%" stop-color="${p.ground}"/>
+            </linearGradient>
+            <linearGradient id="rimGrad_${uid}" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="${p.rim}"/>
+              <stop offset="100%" stop-color="${p.core}"/>
+            </linearGradient>
+            <linearGradient id="wireGrad_${uid}" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="${p.glow}"/>
+              <stop offset="45%" stop-color="${p.wire}"/>
+              <stop offset="100%" stop-color="${p.wireDark}"/>
+            </linearGradient>
+            <linearGradient id="pedestalGrad_${uid}" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="${p.ground}"/>
+              <stop offset="35%" stop-color="${p.sky2}"/>
+              <stop offset="100%" stop-color="${p.ground}"/>
+            </linearGradient>
+            <filter id="softBlur_${uid}" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="5"/>
+            </filter>
+            <clipPath id="fullFrame_${uid}">
+              <rect width="400" height="400"/>
+            </clipPath>
+          </defs>
+          <g clip-path="url(#fullFrame_${uid})">
+            <!-- Studio Gallery / Atmospheric Backdrop -->
+            <rect width="400" height="400" fill="url(#skyGrad_${uid})"/>
+            <circle cx="${sunX}" cy="${sunY}" r="175" fill="url(#glowGrad_${uid})"/>
+            ${seedBlendLayer}
+
+            <!-- Gallery Floor Plane -->
+            <rect x="0" y="305" width="400" height="95" fill="${p.ground}" opacity="0.85"/>
+            <line x1="0" y1="305" x2="400" y2="305" stroke="${p.rim}" stroke-opacity="0.22" stroke-width="1.5"/>
+
+            <!-- Subtle Ambient Light Particles -->
+            ${card.scamper?.code === 'CLEAN' ? '' : bokehParticles}
+
+            <!-- Prompt-Matched Subject Render -->
+            ${subjectSVG}
+          </g>
+        </svg>
+      `.trim();
+
+      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+    }
+
+    async function generateBatch() {
+      if (state.isGenerating) return;
+      const briefText = DOM.inputBrief.value.trim() || SAMPLE_BRIEFS[0];
+      state.brief = briefText;
+      state.isGenerating = true;
+
+      ArcadeSFX.spawn();
+      updateMascotLine("Spawning cards! Get ready to swipe right on winners!");
+
+      DOM.generationProgress.classList.remove('hidden');
+      DOM.progressBar.style.width = '35%';
+      DOM.progressPercent.textContent = '35%';
+
+      const count = state.volume;
+      const ratioLabel = getActiveRatioLabel();
+      const newCards = [];
+
+      for (let i = 0; i < count; i++) {
+        const style = DIVERSE_STYLES[i % DIVERSE_STYLES.length];
+        const angle = DIVERSE_ANGLES[Math.floor(i / DIVERSE_STYLES.length) % DIVERSE_ANGLES.length];
+        const focalPoint = MORPHOLOGICAL_MATRIX.focalPoints[i % MORPHOLOGICAL_MATRIX.focalPoints.length];
+        const lighting = MORPHOLOGICAL_MATRIX.lighting[(i * 2) % MORPHOLOGICAL_MATRIX.lighting.length];
+        const semanticCluster = MORPHOLOGICAL_MATRIX.semanticClusters[(i * 3) % MORPHOLOGICAL_MATRIX.semanticClusters.length];
+
+        const shortTitle = briefText.split(/\s+/).slice(0, 4).join(' ').toUpperCase() || 'BOLD NEW HOOK';
+        const hookFrame = generateHookHeadline(briefText, angle);
+        const card = {
+          id: `thumb_${Date.now()}_${i}`,
+          index: i,
+          isWarmup: i < 3, // First 3 frames treated as throwaway warm-ups
+          fidelity: state.fidelity,
+          dollars: 0,
+          scamper: null,
+          briefText,
+          style,
+          angle,
+          focalPoint,
+          lighting,
+          semanticCluster,
+          ratio: ratioLabel,
+          headlineIdea: hookFrame,
+          visualDescription: `${focalPoint} • ${lighting} • ${style.promptSuffix}`,
+          overlay: {
+            enabled: false,
+            text: shortTitle,
+            position: i % 2 === 0 ? 'bottom' : 'top',
+            theme: i % 3 === 0 ? 'gold' : i % 3 === 1 ? 'light' : 'dark'
+          },
+          layers: {
+            hookFrame,
+            background: MODULAR_BACKGROUNDS[i % MODULAR_BACKGROUNDS.length],
+            cta: MODULAR_CTAS[i % MODULAR_CTAS.length]
+          },
+          rubric: { silhouette: false, novelty: false, strategy: false },
+          status: 'idle',
+          imageUrl: null,
+          svgPlaceholder: ''
+        };
+        card.svgPlaceholder = generateDynamicSVG(card);
+        newCards.push(card);
+      }
+
+      DOM.progressBar.style.width = '100%';
+      DOM.progressPercent.textContent = '100%';
+
+      state.cards = newCards;
+      renderCards();
+      renderStats();
+
+      setTimeout(() => {
+        DOM.generationProgress.classList.add('hidden');
+        state.isGenerating = false;
+        openAutoQueue(newCards);
+      }, 280);
+    }
+
+    function calculateAlgorithmicVariance(cards) {
+      if (!cards || cards.length === 0) return 0;
+      const uniqueStyles = new Set(cards.map(c => c.style.id)).size;
+      const uniqueClusters = new Set(cards.map(c => c.semanticCluster)).size;
+      const uniqueFocals = new Set(cards.map(c => c.focalPoint)).size;
+      const raw = ((uniqueStyles / DIVERSE_STYLES.length) * 40) +
+                  ((uniqueClusters / MORPHOLOGICAL_MATRIX.semanticClusters.length) * 35) +
+                  ((uniqueFocals / MORPHOLOGICAL_MATRIX.focalPoints.length) * 25);
+      return Math.min(99, Math.round(raw));
+    }
+
+    function handleSeedImage(file) {
+      if (!file.type.startsWith('image/')) {
+        showToast('Please upload a valid image file.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        state.seedImageBase64 = e.target.result;
+        state.seedImageName = file.name;
+        DOM.seedImgPreview.src = state.seedImageBase64;
+        DOM.seedImgName.textContent = file.name;
+        DOM.dropzoneEmpty.classList.add('hidden');
+        DOM.dropzonePreview.classList.remove('hidden');
+        ArcadeSFX.coin();
+        updateMascotLine("Seed photo locked! Ready to multiply!");
+        showToast('Seed thumbnail locked!');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearSeedImage() {
+      state.seedImageBase64 = null;
+      state.seedImageName = '';
+      DOM.fileInput.value = '';
+      DOM.dropzoneEmpty.classList.remove('hidden');
+      DOM.dropzonePreview.classList.add('hidden');
+      ArcadeSFX.pass();
+    }
+
+    function bindDragAndDrop() {
+      if (!DOM.dropzone || !DOM.fileInput) return;
+
+      DOM.fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) handleSeedImage(e.target.files[0]);
+      });
+
+      DOM.btnRemoveSeed.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        clearSeedImage();
+      });
+
+      ['dragenter', 'dragover'].forEach(evtName => {
+        DOM.dropzone.addEventListener(evtName, (e) => {
+          e.preventDefault();
+          DOM.dropzone.classList.add('border-blue-600', 'bg-amber-100');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(evtName => {
+        DOM.dropzone.addEventListener(evtName, (e) => {
+          e.preventDefault();
+          DOM.dropzone.classList.remove('border-blue-600', 'bg-amber-100');
+        });
+      });
+
+      DOM.dropzone.addEventListener('drop', (e) => {
+        if (e.dataTransfer?.files && e.dataTransfer.files[0]) handleSeedImage(e.dataTransfer.files[0]);
+      });
+    }
+
+    /* ====================================================================
+     *  CARTRIDGE CARD RENDERING
+     * ==================================================================== */
+    function createCardHTML(card) {
+      const isKept = card.status === 'kept';
+      const isKilled = card.status === 'killed';
+      const imgSrc = card.imageUrl || card.svgPlaceholder;
+      const rubricScore = Object.values(card.rubric).filter(Boolean).length;
+      const cssRatio = (card.ratio || '1:1').replace(':', '/');
+      const ov = card.overlay || { enabled: false, text: '', position: 'bottom', theme: 'gold' };
+      const ovThemeClasses = ov.theme === 'dark'
+        ? 'bg-slate-950/90 text-white border-white'
+        : ov.theme === 'light'
+          ? 'bg-white/95 text-slate-950 border-slate-900'
+          : 'bg-amber-300 text-slate-950 border-slate-900';
+      const ovPosClasses = ov.position === 'top' ? 'top-10' : 'bottom-9';
+
+      return `
+        <div id="card_${card.id}" data-id="${card.id}" class="thumb-card group relative pixel-box-sm transition-all duration-150 overflow-hidden flex flex-col bg-white ${
+          isKept 
+            ? 'ring-4 ring-emerald-400' 
+            : isKilled 
+              ? 'opacity-45 grayscale bg-slate-100' 
+              : 'hover:-translate-y-0.5'
+        }">
+          
+          <div style="aspect-ratio: ${cssRatio};" class="relative w-full bg-cream-100 border-b-2 border-slate-800 overflow-hidden flex items-center justify-center">
+            <img src="${imgSrc}" alt="${card.layers.hookFrame}" class="w-full h-full object-cover transition duration-300 group-hover:scale-[1.03]" />
+
+            ${ov.enabled && ov.text ? `
+              <div class="absolute inset-x-3 ${ovPosClasses} flex justify-center pointer-events-none z-10">
+                <span class="px-3 py-1 rounded-lg border-[2.5px] shadow-[3px_3px_0px_#0F172A] font-sans font-black text-xs sm:text-sm tracking-tight uppercase text-center leading-tight ${ovThemeClasses}">
+                  ${ov.text.replace(/</g, '&lt;')}
+                </span>
+              </div>
+            ` : ''}
+
+            <div class="card-badges absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none">
+              <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-white text-slate-900 border-2 border-slate-800 shadow-[2px_2px_0px_#1E293B]">
+                ${card.isWarmup ? '🔥 WARM-UP' : card.style.tag}
+              </span>
+              <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-amber-300 text-slate-900 border-2 border-slate-800 shadow-[2px_2px_0px_#1E293B]">
+                ${card.scamper ? `REMIX: ${card.scamper.code}` : card.semanticCluster}
+              </span>
+            </div>
+
+            ${isKept ? `
+              <div class="card-status-pill absolute bottom-2.5 left-2.5 px-2.5 py-0.5 rounded-md bg-emerald-400 text-slate-900 font-extrabold text-[10px] font-mono border-2 border-slate-800 shadow-[2px_2px_0px_#1E293B] flex items-center gap-1">
+                <i class="fa-solid fa-star"></i> WINNER ${rubricScore > 0 ? `+${rubricScore}` : ''}
+              </div>
+            ` : ''}
+
+            ${isKilled ? `
+              <div class="card-status-pill absolute bottom-2.5 left-2.5 px-2.5 py-0.5 rounded-md bg-rose-200 text-rose-900 font-bold text-[10px] font-mono border-2 border-slate-800 flex items-center gap-1">
+                <i class="fa-solid fa-ghost"></i> PASSED
+              </div>
+            ` : ''}
+          </div>
+
+          <div class="card-details p-3.5 space-y-2.5 flex-1 flex flex-col justify-between">
+            <div class="space-y-1">
+              <h4 class="text-xs font-extrabold text-slate-900 line-clamp-1">${card.layers.hookFrame}</h4>
+              <div class="flex items-center gap-1.5 text-[10px] font-mono text-slate-500">
+                <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-bold">${card.focalPoint}</span>
+                <span>•</span>
+                <span class="truncate">${card.scamper ? card.scamper.label : card.lighting}</span>
+              </div>
+            </div>
+
+            <!-- Collapsible Layer Drawer (Reduces Card Clutter) -->
+            <div>
+              <button type="button" data-action="toggle-layers" class="w-full py-1 px-2 rounded-lg bg-cream-100 hover:bg-amber-100 border border-slate-300 text-[10px] font-mono font-bold text-slate-700 flex items-center justify-between">
+                <span><i class="fa-solid fa-sliders text-blue-600 mr-1"></i> Text Overlay, Layers & PNG</span>
+                <i class="fa-solid fa-chevron-down text-[9px]"></i>
+              </button>
+              <div class="layer-drawer hidden mt-1.5 bg-cream-100 rounded-xl p-2.5 border-2 border-slate-800 space-y-2 text-[10px] font-mono">
+                <!-- On-Canvas Headline Overlay Controls -->
+                <div class="bg-white p-2 rounded-lg border border-slate-300 space-y-1.5">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-900">ON-CANVAS TEXT</span>
+                    <button type="button" data-action="toggle-overlay" class="px-2 py-0.5 rounded font-bold border border-slate-800 ${ov.enabled ? 'bg-emerald-300 text-slate-900' : 'bg-slate-100 text-slate-600'}">
+                      ${ov.enabled ? 'ON' : 'OFF'}
+                    </button>
+                  </div>
+                  <input type="text" data-action="overlay-text" value="${(ov.text || '').replace(/"/g, '&quot;')}" placeholder="Bold 2-4 word hook..." class="w-full bg-cream-50 border border-slate-400 rounded px-2 py-1 text-[11px] font-sans font-bold text-slate-900 outline-none focus:border-blue-600" />
+                  <div class="flex items-center justify-between gap-1">
+                    <button type="button" data-action="overlay-pos" class="flex-1 py-0.5 px-1.5 rounded bg-cream-100 border border-slate-400 text-[9px] font-bold">
+                      Pos: ${ov.position.toUpperCase()}
+                    </button>
+                    <button type="button" data-action="overlay-theme" class="flex-1 py-0.5 px-1.5 rounded bg-cream-100 border border-slate-400 text-[9px] font-bold">
+                      Style: ${ov.theme.toUpperCase()}
+                    </button>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between text-slate-700">
+                  <span class="truncate"><strong class="text-rose-600">HOOK:</strong> ${card.layers.hookFrame}</span>
+                  <button data-action="swap-hook" title="Re-roll Hook Frame" class="text-blue-600 hover:text-rose-600 ml-1 flex-shrink-0"><i class="fa-solid fa-dice"></i></button>
+                </div>
+                <div class="flex items-center justify-between text-slate-700">
+                  <span class="truncate"><strong class="text-blue-600">BG:</strong> ${card.layers.background}</span>
+                  <button data-action="swap-bg" title="Re-roll Background" class="text-blue-600 hover:text-rose-600 ml-1 flex-shrink-0"><i class="fa-solid fa-dice"></i></button>
+                </div>
+                <div class="flex items-center justify-between text-slate-700">
+                  <span class="truncate"><strong class="text-emerald-700">CTA:</strong> ${card.layers.cta}</span>
+                  <button data-action="swap-cta" title="Re-roll CTA" class="text-blue-600 hover:text-rose-600 ml-1 flex-shrink-0"><i class="fa-solid fa-dice"></i></button>
+                </div>
+                <div class="pt-1 border-t border-slate-300 flex items-center justify-between">
+                  <button data-action="download-png" class="w-full py-1 px-2 rounded bg-white hover:bg-emerald-100 border border-slate-800 text-slate-900 font-bold flex items-center justify-center gap-1">
+                    <i class="fa-solid fa-download text-emerald-600"></i> Download PNG (With Text)
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-1 flex items-center justify-between gap-1.5">
+              <button data-action="keep" class="pixel-btn flex-1 py-1.5 px-2 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1 ${
+                isKept ? 'bg-emerald-400 text-slate-900' : 'bg-amber-200 hover:bg-amber-300 text-slate-900'
+              }">
+                <i class="fa-solid fa-star text-[10px]"></i>
+                <span>${isKept ? 'Starred' : 'Star'}</span>
+              </button>
+
+              <button data-action="branch-8" title="Spawn 8 variations evolved from this concept" class="pixel-btn py-1.5 px-2 rounded-lg text-xs font-mono font-bold bg-sky-100 hover:bg-sky-200 text-sky-950 flex items-center justify-center gap-1">
+                <i class="fa-solid fa-code-branch text-[10px]"></i>
+                <span>8 Like This</span>
+              </button>
+
+              <button data-action="scamper" title="Try a quick layout remix" class="pixel-btn py-1.5 px-2 rounded-lg text-xs font-mono font-bold bg-indigo-100 hover:bg-indigo-200 text-indigo-900 flex items-center justify-center gap-1">
+                <i class="fa-solid fa-shuffle text-[10px]"></i>
+              </button>
+
+              <button data-action="kill" class="pixel-btn py-1.5 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1 ${
+                isKilled ? 'bg-sky-200 text-slate-900' : 'bg-cream-100 hover:bg-rose-100 text-slate-700'
+              }">
+                <i class="fa-solid fa-xmark text-[10px]"></i>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      `;
+    }
+
+    function bindCardEvents() {
+      DOM.gridContainer.querySelectorAll('.thumb-card').forEach(cardEl => {
+        const id = cardEl.dataset.id;
+        const cardObj = state.cards.find(c => c.id === id);
+        if (!cardObj) return;
+
+        cardEl.querySelector('button[data-action="toggle-layers"]')?.addEventListener('click', () => {
+          const drawer = cardEl.querySelector('.layer-drawer');
+          if (drawer) drawer.classList.toggle('hidden');
+        });
+
+        cardEl.querySelector('button[data-action="toggle-overlay"]')?.addEventListener('click', () => {
+          if (!cardObj.overlay) cardObj.overlay = { enabled: false, text: 'WATCH THIS', position: 'bottom', theme: 'gold' };
+          cardObj.overlay.enabled = !cardObj.overlay.enabled;
+          ArcadeSFX.coin();
+          renderCards();
+          // Keep drawer open after re-render
+          const updatedDrawer = document.querySelector(`#card_${cardObj.id} .layer-drawer`);
+          if (updatedDrawer) updatedDrawer.classList.remove('hidden');
+        });
+
+        cardEl.querySelector('input[data-action="overlay-text"]')?.addEventListener('input', (e) => {
+          if (!cardObj.overlay) cardObj.overlay = { enabled: true, text: '', position: 'bottom', theme: 'gold' };
+          cardObj.overlay.text = e.target.value;
+          cardObj.overlay.enabled = true;
+          const badgeSpan = cardEl.querySelector('.z-10 span');
+          if (badgeSpan) badgeSpan.textContent = e.target.value;
+        });
+
+        cardEl.querySelector('button[data-action="overlay-pos"]')?.addEventListener('click', () => {
+          if (!cardObj.overlay) return;
+          cardObj.overlay.position = cardObj.overlay.position === 'bottom' ? 'top' : 'bottom';
+          ArcadeSFX.coin();
+          renderCards();
+          document.querySelector(`#card_${cardObj.id} .layer-drawer`)?.classList.remove('hidden');
+        });
+
+        cardEl.querySelector('button[data-action="overlay-theme"]')?.addEventListener('click', () => {
+          if (!cardObj.overlay) return;
+          const order = ['gold', 'light', 'dark'];
+          cardObj.overlay.theme = order[(order.indexOf(cardObj.overlay.theme) + 1) % order.length];
+          ArcadeSFX.coin();
+          renderCards();
+          document.querySelector(`#card_${cardObj.id} .layer-drawer`)?.classList.remove('hidden');
+        });
+
+        cardEl.querySelector('button[data-action="download-png"]')?.addEventListener('click', () => {
+          exportCardAsPng(cardObj);
+        });
+
+        cardEl.querySelector('button[data-action="branch-8"]')?.addEventListener('click', () => {
+          spawnBranchFromCard(cardObj);
+        });
+
+        cardEl.querySelector('button[data-action="keep"]')?.addEventListener('click', () => {
+          cardObj.status = (cardObj.status === 'kept') ? 'idle' : 'kept';
+          if (cardObj.status === 'kept') ArcadeSFX.coin();
+          renderCards();
+          renderStats();
+        });
+
+        cardEl.querySelector('button[data-action="kill"]')?.addEventListener('click', () => {
+          cardObj.status = (cardObj.status === 'killed') ? 'idle' : 'killed';
+          ArcadeSFX.pass();
+          renderCards();
+          renderStats();
+        });
+
+        cardEl.querySelector('button[data-action="swap-hook"]')?.addEventListener('click', () => {
+          cardObj.layers.hookFrame = generateHookHeadline(cardObj.briefText, cardObj.angle);
+          cardObj.headlineIdea = cardObj.layers.hookFrame;
+          cardObj.svgPlaceholder = generateDynamicSVG(cardObj);
+          ArcadeSFX.coin();
+          renderCards();
+          showToast('Re-rolled Hook layer!');
+        });
+
+        cardEl.querySelector('button[data-action="swap-bg"]')?.addEventListener('click', () => {
+          const nextIdx = (MODULAR_BACKGROUNDS.indexOf(cardObj.layers.background) + 1) % MODULAR_BACKGROUNDS.length;
+          cardObj.layers.background = MODULAR_BACKGROUNDS[nextIdx];
+          cardObj.svgPlaceholder = generateDynamicSVG(cardObj);
+          ArcadeSFX.coin();
+          renderCards();
+          showToast('Re-rolled Background layer!');
+        });
+
+        cardEl.querySelector('button[data-action="swap-cta"]')?.addEventListener('click', () => {
+          const nextIdx = (MODULAR_CTAS.indexOf(cardObj.layers.cta) + 1) % MODULAR_CTAS.length;
+          cardObj.layers.cta = MODULAR_CTAS[nextIdx];
+          cardObj.svgPlaceholder = generateDynamicSVG(cardObj);
+          ArcadeSFX.coin();
+          renderCards();
+          showToast('Re-rolled CTA layer!');
+        });
+
+        cardEl.querySelector('button[data-action="scamper"]')?.addEventListener('click', () => {
+          const currentIdx = cardObj.scamper ? SCAMPER_OPS.findIndex(s => s.code === cardObj.scamper.code) : -1;
+          cardObj.scamper = SCAMPER_OPS[(currentIdx + 1) % SCAMPER_OPS.length];
+          cardObj.svgPlaceholder = generateDynamicSVG(cardObj);
+          ArcadeSFX.coin();
+          renderCards();
+          showToast(`Remix [${cardObj.scamper.label}]: ${cardObj.scamper.desc}`);
+        });
+      });
+    }
+
+    /* ====================================================================
+     *  $100 BUDGET VOTE & TOP 3 AUDIENCE TEST
+     * ==================================================================== */
+    function getRemainingDollars() {
+      const spent = state.cards.reduce((sum, c) => sum + (c.dollars || 0), 0);
+      return Math.max(0, 100 - spent);
+    }
+
+    function openPresentationMode() {
+      const kept = state.cards.filter(c => c.status === 'kept');
+      DOM.abResultsBanner.classList.add('hidden');
+      DOM.dollarRemaining.textContent = getRemainingDollars();
+      ArcadeSFX.coin();
+      
+      if (kept.length === 0) {
+        DOM.presentationGrid.innerHTML = '';
+        DOM.presentationEmpty.classList.remove('hidden');
+      } else {
+        DOM.presentationEmpty.classList.add('hidden');
+        DOM.presentationGrid.innerHTML = kept.map(card => {
+          const cssRatio = (card.ratio || '1:1').replace(':', '/');
+          const stageNames = { notan: '1. B&W Shapes', study: '2. Color Draft', polish: '3. Final Ad' };
+          return `
+            <div class="pixel-box overflow-hidden flex flex-col bg-white">
+              <div style="aspect-ratio: ${cssRatio};" class="w-full bg-cream-100 border-b-[3px] border-slate-800 relative">
+                <img src="${card.imageUrl || card.svgPlaceholder}" alt="${card.headlineIdea}" class="w-full h-full object-cover" />
+                <span class="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-emerald-400 text-slate-900 font-mono text-xs font-extrabold border-2 border-slate-800 shadow-[2px_2px_0px_#1E293B]">
+                  $${card.dollars || 0} Bet
+                </span>
+              </div>
+              <div class="p-5 space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="px-2 py-0.5 rounded text-xs font-mono font-bold bg-amber-300 text-slate-900 border border-slate-800">${card.style.tag}</span>
+                  <span class="text-[10px] font-mono font-bold text-slate-500">${stageNames[card.fidelity || 'notan']}</span>
+                </div>
+                <h3 class="text-base font-extrabold text-slate-900">${card.headlineIdea}</h3>
+                <p class="text-xs text-slate-600">${card.visualDescription}</p>
+                
+                <!-- $100 Play-Money Voting Controls -->
+                <div class="pt-2 border-t-2 border-slate-100 flex items-center justify-between gap-2">
+                  <span class="text-[11px] font-mono font-bold text-slate-700">YOUR VOTE:</span>
+                  <div class="flex items-center gap-1.5">
+                    <button type="button" data-bet="-10" data-id="${card.id}" class="bet-btn pixel-btn px-2.5 py-1 rounded-lg bg-cream-100 hover:bg-rose-100 text-xs font-mono font-bold">-$10</button>
+                    <button type="button" data-bet="10" data-id="${card.id}" class="bet-btn pixel-btn px-2.5 py-1 rounded-lg bg-amber-200 hover:bg-amber-300 text-xs font-mono font-bold">+$10</button>
+                    <button type="button" data-bet="25" data-id="${card.id}" class="bet-btn pixel-btn px-2.5 py-1 rounded-lg bg-emerald-300 hover:bg-emerald-400 text-xs font-mono font-bold">+$25</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        DOM.presentationGrid.querySelectorAll('.bet-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const card = state.cards.find(c => c.id === btn.dataset.id);
+            const delta = parseInt(btn.dataset.bet, 10);
+            if (!card) return;
+            const rem = getRemainingDollars();
+            if (delta > 0 && rem < delta) {
+              showToast(`Only $${rem} left in your $100 budget! Reduce another card first.`);
+              ArcadeSFX.pass();
+              return;
+            }
+            card.dollars = Math.max(0, (card.dollars || 0) + delta);
+            ArcadeSFX.coin();
+            openPresentationMode();
+          });
+        });
+      }
+
+      DOM.presentationModal.classList.remove('hidden');
+      DOM.presentationModal.classList.add('flex');
+    }
+
+    async function runWatchTimeAbSimulation() {
+      const kept = state.cards.filter(c => c.status === 'kept');
+      if (kept.length === 0) {
+        showToast('Star some thumbnails first!');
+        return;
+      }
+      // Pick top 3 by $100 Test allocation (or first 3 kept)
+      const finalists = [...kept]
+        .sort((a, b) => (b.dollars || 0) - (a.dollars || 0))
+        .slice(0, 3);
+
+      // Compute real pixel-level visual contrast & composition telemetry via offscreen canvas
+      const scored = await Promise.all(finalists.map(async (c, idx) => {
+        const telemetry = await computeRealVisualTelemetry(c);
+        const rubricBonus = (c.rubric.silhouette ? 8 : 0) + (c.rubric.strategy ? 7 : 0) + (c.rubric.novelty ? 4 : 0);
+        const rawWeight = (telemetry.contrastScore * 0.4) + (telemetry.legibilityScore * 0.35) + rubricBonus + ((c.dollars || 0) * 0.25) + ((3 - idx) * 3);
+        return { card: c, rawWeight, telemetry };
+      }));
+      const sumWeight = scored.reduce((s, x) => s + x.rawWeight, 0);
+      scored.forEach(x => {
+        x.share = ((x.rawWeight / sumWeight) * 100).toFixed(1);
+      });
+      scored.sort((a, b) => parseFloat(b.share) - parseFloat(a.share));
+
+      DOM.abResultsGrid.innerHTML = scored.map((item, rank) => `
+        <div class="p-3.5 rounded-xl bg-white border-2 ${rank === 0 ? 'border-emerald-600 ring-2 ring-emerald-300' : 'border-slate-800'} space-y-1.5">
+          <div class="flex items-center justify-between font-mono text-xs font-extrabold">
+            <span class="${rank === 0 ? 'text-emerald-700' : 'text-slate-700'}">${rank === 0 ? '🏆 WINNER' : `RUNNER-UP #${rank + 1}`}</span>
+            <span class="text-sm text-blue-700">${item.share}% Est. Share</span>
+          </div>
+          <p class="text-xs font-bold text-slate-900 line-clamp-1">${item.card.headlineIdea}</p>
+          <div class="grid grid-cols-3 gap-1 pt-1 text-[10px] font-mono text-center">
+            <div class="bg-cream-100 rounded p-1 border border-slate-300">
+              <span class="block text-slate-500">CONTRAST</span>
+              <strong class="text-slate-900">${item.telemetry.contrastScore}%</strong>
+            </div>
+            <div class="bg-cream-100 rounded p-1 border border-slate-300">
+              <span class="block text-slate-500">120PX POP</span>
+              <strong class="text-slate-900">${item.telemetry.legibilityScore}%</strong>
+            </div>
+            <div class="bg-cream-100 rounded p-1 border border-slate-300">
+              <span class="block text-slate-500">BUDGET</span>
+              <strong class="text-emerald-700">$${item.card.dollars || 0}</strong>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      // Populate realistic YouTube / Social feed comparison mockup
+      if (DOM.liveFeedMockupGrid) {
+        const competitors = [
+          { title: '10 Mistakes Every Designer Makes in 2026', channel: 'DesignCraft Studio • 412K views', bg: 'from-slate-800 to-slate-950' },
+        ];
+        const feedCards = [
+          ...scored.map((s, i) => ({
+            isUser: true,
+            rank: i + 1,
+            img: s.card.imageUrl || s.card.svgPlaceholder,
+            title: s.card.headlineIdea,
+            channel: `Your Channel • Winner #${i + 1} (${s.share}%)`
+          })),
+          ...competitors.map(comp => ({
+            isUser: false,
+            title: comp.title,
+            channel: comp.channel,
+            bg: comp.bg
+          }))
+        ];
+
+        DOM.liveFeedMockupGrid.innerHTML = feedCards.map(item => item.isUser ? `
+          <div class="bg-white rounded-xl border-2 border-emerald-600 overflow-hidden shadow-sm">
+            <div class="aspect-video w-full bg-slate-900 relative">
+              <img src="${item.img}" alt="${item.title}" class="w-full h-full object-cover" />
+              <span class="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-emerald-400 text-slate-900 font-mono text-[9px] font-extrabold border border-slate-900">YOUR #${item.rank}</span>
+              <span class="absolute bottom-1.5 right-1.5 px-1 py-0.5 rounded bg-black/80 text-white font-mono text-[9px]">12:48</span>
+            </div>
+            <div class="p-2.5 space-y-0.5">
+              <p class="text-[11px] font-extrabold text-slate-900 line-clamp-2 leading-snug">${item.title}</p>
+              <p class="text-[10px] text-emerald-700 font-bold">${item.channel}</p>
+            </div>
+          </div>
+        ` : `
+          <div class="bg-white rounded-xl border border-slate-300 overflow-hidden opacity-85">
+            <div class="aspect-video w-full bg-gradient-to-br ${item.bg} flex items-center justify-center p-3 text-center relative">
+              <span class="font-sans font-extrabold text-white text-xs uppercase tracking-wide">COMPETING FEED VIDEO</span>
+              <span class="absolute bottom-1.5 right-1.5 px-1 py-0.5 rounded bg-black/80 text-white font-mono text-[9px]">08:14</span>
+            </div>
+            <div class="p-2.5 space-y-0.5">
+              <p class="text-[11px] font-bold text-slate-700 line-clamp-2 leading-snug">${item.title}</p>
+              <p class="text-[10px] text-slate-500">${item.channel}</p>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      DOM.abResultsBanner.classList.remove('hidden');
+      ArcadeSFX.fanfare();
+      showToast('Live Feed & Contrast Telemetry ready!');
+    }
+
+    /* ====================================================================
+     *  PRODUCTION UPGRADES: REAL AI RENDER, PNG EXPORT, BRANCHING & TELEMETRY
+     * ==================================================================== */
+    function computeRealVisualTelemetry(card) {
+      return new Promise((resolve) => {
+        const src = card.imageUrl || card.svgPlaceholder;
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, 64, 64);
+            const data = ctx.getImageData(0, 0, 64, 64).data;
+
+            let centerLum = 0, centerCount = 0;
+            let edgeLum = 0, edgeCount = 0;
+            let highDeltaEdges = 0;
+
+            for (let y = 0; y < 64; y++) {
+              for (let x = 0; x < 64; x++) {
+                const idx = (y * 64 + x) * 4;
+                const lum = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+                const isCenter = x >= 16 && x < 48 && y >= 16 && y < 48;
+                if (isCenter) {
+                  centerLum += lum;
+                  centerCount++;
+                } else {
+                  edgeLum += lum;
+                  edgeCount++;
+                }
+                if (x < 63) {
+                  const nIdx = idx + 4;
+                  const nLum = 0.299 * data[nIdx] + 0.587 * data[nIdx + 1] + 0.114 * data[nIdx + 2];
+                  if (Math.abs(lum - nLum) > 28) highDeltaEdges++;
+                }
+              }
+            }
+            const avgCenter = centerLum / Math.max(1, centerCount);
+            const avgEdge = edgeLum / Math.max(1, edgeCount);
+            const lumDiff = Math.abs(avgCenter - avgEdge);
+            const contrastScore = Math.min(99, Math.max(58, Math.round(55 + lumDiff * 0.45)));
+            const edgeRatio = highDeltaEdges / (64 * 64);
+            const legibilityScore = Math.min(99, Math.max(60, Math.round(64 + Math.min(25, edgeRatio * 120) + (card.overlay?.enabled ? 8 : 0))));
+            resolve({ contrastScore, legibilityScore });
+          } catch (e) {
+            resolve({ contrastScore: 84, legibilityScore: 86 });
+          }
+        };
+        img.onerror = () => resolve({ contrastScore: 82, legibilityScore: 84 });
+        img.src = src;
+      });
+    }
+
+    function spawnBranchFromCard(parentCard) {
+      const newCards = [];
+      for (let i = 0; i < 8; i++) {
+        const style = DIVERSE_STYLES[(parentCard.index + i + 1) % DIVERSE_STYLES.length];
+        const angle = DIVERSE_ANGLES[i % DIVERSE_ANGLES.length];
+        const focalPoint = MORPHOLOGICAL_MATRIX.focalPoints[i % MORPHOLOGICAL_MATRIX.focalPoints.length];
+        const lighting = MORPHOLOGICAL_MATRIX.lighting[(i + 1) % MORPHOLOGICAL_MATRIX.lighting.length];
+        const hookFrame = generateHookHeadline(parentCard.briefText, angle);
+
+        const clone = {
+          ...parentCard,
+          id: `branch_${Date.now()}_${i}`,
+          index: state.cards.length + i,
+          isWarmup: false,
+          style,
+          angle,
+          focalPoint,
+          lighting,
+          headlineIdea: hookFrame,
+          visualDescription: `Branched from #${parentCard.index + 1} • ${focalPoint} • ${lighting}`,
+          layers: {
+            hookFrame,
+            background: MODULAR_BACKGROUNDS[i % MODULAR_BACKGROUNDS.length],
+            cta: MODULAR_CTAS[i % MODULAR_CTAS.length]
+          },
+          rubric: { ...parentCard.rubric },
+          status: 'idle',
+          imageUrl: null,
+          svgPlaceholder: ''
+        };
+        clone.svgPlaceholder = generateDynamicSVG(clone);
+        newCards.push(clone);
+      }
+      state.cards = [...newCards, ...state.cards];
+      ArcadeSFX.spawn();
+      renderCards();
+      renderStats();
+      showToast('Spawned 8 evolved variations from your winning card!');
+    }
+
+    function exportCardAsPng(card) {
+      const src = card.imageUrl || card.svgPlaceholder;
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1080;
+        canvas.height = 1080;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        // Burn in on-canvas headline overlay if enabled
+        if (card.overlay?.enabled && card.overlay?.text) {
+          const text = card.overlay.text.toUpperCase();
+          ctx.font = '900 54px "Plus Jakarta Sans", sans-serif';
+          const metrics = ctx.measureText(text);
+          const padX = 42;
+          const boxW = Math.min(980, metrics.width + padX * 2);
+          const boxH = 88;
+          const boxX = (canvas.width - boxW) / 2;
+          const boxY = card.overlay.position === 'top' ? 76 : canvas.height - 156;
+
+          ctx.fillStyle = card.overlay.theme === 'dark' ? '#0F172A' : card.overlay.theme === 'light' ? '#FFFFFF' : '#FCD34D';
+          ctx.strokeStyle = '#0F172A';
+          ctx.lineWidth = 6;
+          ctx.beginPath();
+          ctx.roundRect(boxX, boxY, boxW, boxH, 18);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = card.overlay.theme === 'dark' ? '#FFFFFF' : '#0F172A';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(text, canvas.width / 2, boxY + boxH / 2 + 2, 920);
+        }
+
+        const link = document.createElement('a');
+        link.download = `thumbtak_${card.id}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        ArcadeSFX.coin();
+        showToast('Downloaded high-res PNG!');
+      };
+      img.src = src;
+    }
+
+    function exportSocialPollGraphic() {
+      const kept = state.cards.filter(c => c.status === 'kept');
+      if (kept.length === 0) {
+        showToast('Star at least 1 favorite thumbnail first!');
+        return;
+      }
+      const finalists = [...kept]
+        .sort((a, b) => (b.dollars || 0) - (a.dollars || 0))
+        .slice(0, 3);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 1200;
+      canvas.height = 675;
+      const ctx = canvas.getContext('2d');
+
+      // Retro Cream Arcade Poll Background
+      ctx.fillStyle = '#FFF8E7';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#1E293B';
+      ctx.lineWidth = 10;
+      ctx.strokeRect(5, 5, canvas.width - 10, canvas.height - 10);
+
+      // Header Banner
+      ctx.fillStyle = '#1E293B';
+      ctx.font = '900 34px "Plus Jakarta Sans", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('WHICH THUMBNAIL WOULD YOU CLICK? (A / B / C)', canvas.width / 2, 68);
+
+      ctx.fillStyle = '#475569';
+      ctx.font = '700 18px "Space Mono", monospace';
+      ctx.fillText(`Prompt: "${(state.brief || 'Concept Test').slice(0, 58)}" • Made with ThumbTak`, canvas.width / 2, 104);
+
+      const labels = ['OPTION A', 'OPTION B', 'OPTION C'];
+      const slotW = 350;
+      const slotH = 350;
+      const gap = 32;
+      const startX = (canvas.width - (finalists.length * slotW + (finalists.length - 1) * gap)) / 2;
+
+      let loadedCount = 0;
+      finalists.forEach((card, idx) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          const x = startX + idx * (slotW + gap);
+          const y = 145;
+
+          // Tactile Drop Shadow
+          ctx.fillStyle = '#1E293B';
+          ctx.fillRect(x + 8, y + 8, slotW, slotH + 90);
+
+          // Card Frame
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(x, y, slotW, slotH + 90);
+          ctx.strokeStyle = '#1E293B';
+          ctx.lineWidth = 4;
+          ctx.strokeRect(x, y, slotW, slotH + 90);
+
+          ctx.drawImage(img, x, y, slotW, slotH);
+
+          // Option Pill Badge
+          ctx.fillStyle = idx === 0 ? '#34D399' : idx === 1 ? '#FCD34D' : '#38BDF8';
+          ctx.fillRect(x + 14, y + 14, 128, 36);
+          ctx.strokeRect(x + 14, y + 14, 128, 36);
+          ctx.fillStyle = '#0F172A';
+          ctx.font = '800 16px "Space Mono", monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(labels[idx], x + 78, y + 37);
+
+          // Caption
+          ctx.fillStyle = '#0F172A';
+          ctx.font = '800 16px "Plus Jakarta Sans", sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText((card.overlay?.text || card.headlineIdea).slice(0, 30), x + 16, y + slotH + 36);
+
+          ctx.fillStyle = '#64748B';
+          ctx.font = '700 13px "Space Mono", monospace';
+          ctx.fillText(`${card.style.tag} • $${card.dollars || 0} Team Vote`, x + 16, y + slotH + 66);
+
+          loadedCount++;
+          if (loadedCount === finalists.length) {
+            const link = document.createElement('a');
+            link.download = 'thumbtak_abc_poll.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            ArcadeSFX.fanfare();
+            showToast('Exported A/B/C Poll Graphic for social sharing!');
+          }
+        };
+        img.src = card.imageUrl || card.svgPlaceholder;
+      });
+    }
+
+    function loadLiveDemoDeck() {
+      const demoBrief = "Twisted copper wire sculpture of a soaring crane on a sunlit gallery pedestal";
+      DOM.inputBrief.value = demoBrief;
+      state.brief = demoBrief;
+
+      const demoCards = [];
+      for (let i = 0; i < 8; i++) {
+        const style = DIVERSE_STYLES[i % DIVERSE_STYLES.length];
+        const angle = DIVERSE_ANGLES[i % DIVERSE_ANGLES.length];
+        const focalPoint = MORPHOLOGICAL_MATRIX.focalPoints[i % MORPHOLOGICAL_MATRIX.focalPoints.length];
+        const lighting = MORPHOLOGICAL_MATRIX.lighting[i % MORPHOLOGICAL_MATRIX.lighting.length];
+        const semanticCluster = MORPHOLOGICAL_MATRIX.semanticClusters[i % MORPHOLOGICAL_MATRIX.semanticClusters.length];
+        const hookFrame = generateHookHeadline(demoBrief, angle);
+        const isStarred = i === 1 || i === 4 || i === 6;
+
+        const card = {
+          id: `demo_${Date.now()}_${i}`,
+          index: i,
+          isWarmup: i < 2,
+          fidelity: 'polish',
+          dollars: i === 1 ? 50 : i === 4 ? 30 : i === 6 ? 20 : 0,
+          scamper: null,
+          briefText: demoBrief,
+          style,
+          angle,
+          focalPoint,
+          lighting,
+          semanticCluster,
+          ratio: '16:9',
+          headlineIdea: hookFrame,
+          visualDescription: `${focalPoint} • ${lighting} • ${style.promptSuffix}`,
+          overlay: {
+            enabled: i === 1,
+            text: 'HAND-BENT WIRE ART',
+            position: 'bottom',
+            theme: 'gold'
+          },
+          layers: {
+            hookFrame,
+            background: MODULAR_BACKGROUNDS[i % MODULAR_BACKGROUNDS.length],
+            cta: MODULAR_CTAS[i % MODULAR_CTAS.length]
+          },
+          rubric: { silhouette: isStarred, novelty: i === 4, strategy: isStarred },
+          status: isStarred ? 'kept' : 'idle',
+          imageUrl: null,
+          svgPlaceholder: ''
+        };
+        card.svgPlaceholder = generateDynamicSVG(card);
+        demoCards.push(card);
+      }
+
+      state.cards = demoCards;
+      ArcadeSFX.fanfare();
+      renderCards();
+      renderStats();
+      updateMascotLine("Demo deck loaded! 3 favorites already starred — try Tiny Phone Check or Budget Vote!");
+      showToast('Live 8-card demo deck loaded with 3 starred favorites!');
+    }
+
+    async function upgradeFavoritesWithRealAI() {
+      const kept = state.cards.filter(c => c.status === 'kept');
+      if (kept.length === 0) {
+        showToast('Star some favorite cards first!');
+        return;
+      }
+
+      DOM.generationProgress.classList.remove('hidden');
+      DOM.progressText.textContent = `Rendering ${kept.length} starred favorites with Real AI...`;
+      DOM.progressBar.style.width = '25%';
+      DOM.progressPercent.textContent = '25%';
+
+      const apiKey = "";
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key=${apiKey}`;
+
+      let completed = 0;
+      for (const card of kept) {
+        card.fidelity = 'polish';
+        const prompt = `High-impact studio photograph and editorial visual concept for: "${card.briefText}". Style: ${card.style.promptSuffix}. Lighting: ${card.lighting}. Composition: ${card.focalPoint}. No text overlays, clean gallery framing.`;
+        try {
+          const payload = {
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: {
+              responseModalities: ['IMAGE'],
+              imageConfig: { aspectRatio: ['1:1', '4:5', '16:9', '9:16'].includes(card.ratio) ? card.ratio : '1:1' }
+            }
+          };
+          const res = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const part = data?.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+            if (part?.inlineData?.data) {
+              card.imageUrl = `data:${part.inlineData.mimeType || 'image/png'};base64,${part.inlineData.data}`;
+            }
+          }
+        } catch (err) {
+          // Graceful fallback to high-contrast procedural render
+          card.svgPlaceholder = generateDynamicSVG(card);
+        }
+        completed++;
+        const pct = Math.round((completed / kept.length) * 100);
+        DOM.progressBar.style.width = `${pct}%`;
+        DOM.progressPercent.textContent = `${pct}%`;
+      }
+
+      DOM.generationProgress.classList.add('hidden');
+      ArcadeSFX.fanfare();
+      renderCards();
+      showToast(`Finished rendering ${kept.length} AI favorites!`);
+    }
+
+    function copyShareableVoteLink() {
+      const kept = state.cards.filter(c => c.status === 'kept');
+      const sourceCards = kept.length > 0 ? kept : state.cards.slice(0, 6);
+      const summary = {
+        brief: state.brief,
+        cards: sourceCards.map(c => ({
+          index: c.index,
+          styleId: c.style.id,
+          angleId: c.angle.id,
+          focalPoint: c.focalPoint,
+          lighting: c.lighting,
+          semanticCluster: c.semanticCluster,
+          ratio: c.ratio,
+          headlineIdea: c.headlineIdea,
+          dollars: c.dollars || 0,
+          overlay: c.overlay || { enabled: false, text: '', position: 'bottom', theme: 'gold' }
+        }))
+      };
+      const encoded = btoa(encodeURIComponent(JSON.stringify(summary)));
+      const shareUrl = `${window.location.origin}${window.location.pathname}#vote=${encoded}`;
+      const tempArea = document.createElement('textarea');
+      tempArea.value = shareUrl;
+      document.body.appendChild(tempArea);
+      tempArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempArea);
+      ArcadeSFX.coin();
+      showToast('Shareable voting link (with all starred finalists) copied!');
+    }
+
+    function loadSharedVoteFromUrl() {
+      if (!window.location.hash.startsWith('#vote=')) return;
+      try {
+        const raw = window.location.hash.replace('#vote=', '');
+        const parsed = JSON.parse(decodeURIComponent(atob(raw)));
+        if (parsed?.brief) {
+          DOM.inputBrief.value = parsed.brief;
+          state.brief = parsed.brief;
+        }
+        if (Array.isArray(parsed?.cards) && parsed.cards.length > 0) {
+          state.cards = parsed.cards.map((item, idx) => {
+            const style = DIVERSE_STYLES.find(s => s.id === item.styleId) || DIVERSE_STYLES[idx % DIVERSE_STYLES.length];
+            const angle = DIVERSE_ANGLES.find(a => a.id === item.angleId) || DIVERSE_ANGLES[idx % DIVERSE_ANGLES.length];
+            const card = {
+              id: `shared_${Date.now()}_${idx}`,
+              index: item.index ?? idx,
+              isWarmup: false,
+              fidelity: 'polish',
+              dollars: item.dollars || 0,
+              scamper: null,
+              briefText: parsed.brief || SAMPLE_BRIEFS[0],
+              style,
+              angle,
+              focalPoint: item.focalPoint || MORPHOLOGICAL_MATRIX.focalPoints[0],
+              lighting: item.lighting || MORPHOLOGICAL_MATRIX.lighting[0],
+              semanticCluster: item.semanticCluster || MORPHOLOGICAL_MATRIX.semanticClusters[0],
+              ratio: item.ratio || '1:1',
+              headlineIdea: item.headlineIdea || generateHookHeadline(parsed.brief, angle),
+              visualDescription: `${item.focalPoint || 'Center Hero'} • ${item.lighting || 'Studio'} • ${style.promptSuffix}`,
+              overlay: item.overlay || { enabled: false, text: '', position: 'bottom', theme: 'gold' },
+              layers: {
+                hookFrame: item.headlineIdea || 'Shared Concept',
+                background: MODULAR_BACKGROUNDS[idx % MODULAR_BACKGROUNDS.length],
+                cta: MODULAR_CTAS[idx % MODULAR_CTAS.length]
+              },
+              rubric: { silhouette: true, novelty: false, strategy: true },
+              status: 'kept',
+              imageUrl: null,
+              svgPlaceholder: ''
+            };
+            card.svgPlaceholder = generateDynamicSVG(card);
+            return card;
+          });
+          renderCards();
+          renderStats();
+          openPresentationMode();
+          showToast('Shared voting deck loaded! Spend your $100 budget to vote.');
+        }
+      } catch (e) {
+        // Ignore malformed hash
+      }
+    }
+
+    function closePresentationMode() {
+      DOM.presentationModal.classList.add('hidden');
+      DOM.presentationModal.classList.remove('flex');
+    }
+
+    function exportFigmaManifest() {
+      const kept = state.cards.filter(c => c.status === 'kept');
+      const activeSet = kept.length > 0 ? kept : state.cards;
+      const varianceScore = calculateAlgorithmicVariance(activeSet);
+
+      const payload = {
+        tool: "ThumbTak Arcade",
+        campaignBrief: state.brief,
+        totalExplored: state.cards.length,
+        curatedCount: kept.length,
+        algorithmicSignalAlignment: {
+          visualVarianceScore: `${varianceScore}%`,
+          rotationCadence: {
+            hookFrameRefresh: "Every 7-10 days",
+            backgroundLayoutRefresh: "Every 14-21 days",
+            coreCtaRefresh: "30+ days"
+          }
+        },
+        approvedThumbnails: activeSet.map(c => ({
+          id: c.id,
+          style: c.style.tag,
+          semanticCluster: c.semanticCluster,
+          focalPoint: c.focalPoint,
+          aspectRatio: c.ratio,
+          rubricScore: c.rubric,
+          modularLayers: c.layers,
+          promptDirective: c.visualDescription
+        }))
+      };
+
+      const jsonStr = JSON.stringify(payload, null, 2);
+      const tempArea = document.createElement('textarea');
+      tempArea.value = jsonStr;
+      document.body.appendChild(tempArea);
+      tempArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempArea);
+      ArcadeSFX.coin();
+      showToast(`Copied ${activeSet.length} winning card specs to clipboard!`);
+    }
+
+    /* ====================================================================
+     *  AUTOMATIC POPUP SWIPE QUEUE
+     * ==================================================================== */
+    function openAutoQueue(cardsList) {
+      if (!cardsList || cardsList.length === 0) return;
+      state.queueCards = cardsList;
+      state.queueIndex = 0;
+      state.queueActive = true;
+      DOM.autoQueueModal.classList.remove('hidden');
+      DOM.autoQueueModal.classList.add('flex');
+      renderQueueCard();
+    }
+
+    function closeAutoQueue() {
+      state.queueActive = false;
+      DOM.autoQueueModal.classList.add('hidden');
+      DOM.autoQueueModal.classList.remove('flex');
+      renderCards();
+      renderStats();
+    }
+
+    function renderQueueCard() {
+      const cards = state.queueCards || [];
+      if (state.queueIndex >= cards.length) {
+        closeAutoQueue();
+        openDeckCompleteModal();
+        return;
+      }
+
+      const card = cards[state.queueIndex];
+      resetCardTransform();
+      DOM.queueProgressBadge.textContent = `${state.queueIndex + 1} / ${cards.length}`;
+      DOM.swipeCardImg.src = card.imageUrl || card.svgPlaceholder;
+      if (DOM.swipeWarmupBadge) {
+        DOM.swipeWarmupBadge.classList.toggle('hidden', !card.isWarmup);
+      }
+      if (DOM.swipeCardAspectWrap) {
+        DOM.swipeCardAspectWrap.style.aspectRatio = (card.ratio || '1:1').replace(':', '/');
+      }
+      DOM.swipeCardStyle.textContent = card.style.tag.toUpperCase();
+      DOM.swipeCardCluster.textContent = card.semanticCluster.toUpperCase();
+      DOM.swipeCardRatio.textContent = card.ratio;
+      DOM.swipeCardHeadline.textContent = card.headlineIdea;
+      DOM.swipeCardDesc.textContent = card.visualDescription;
+
+      document.querySelectorAll('.rubric-pill').forEach(pill => {
+        const active = !!card.rubric[pill.dataset.rubric];
+        pill.classList.toggle('bg-amber-300', active);
+        pill.classList.toggle('border-slate-800', active);
+        pill.classList.toggle('text-slate-900', active);
+      });
+    }
+
+    function commitSwipeDecision(decision) {
+      const cards = state.queueCards || [];
+      const card = cards[state.queueIndex];
+      if (!card) return;
+
+      card.status = decision;
+      if (decision === 'kept') ArcadeSFX.coin();
+      else ArcadeSFX.pass();
+
+      const dir = decision === 'kept' ? 1 : -1;
+      DOM.swipeCard.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+      DOM.swipeCard.style.transform = `translateX(${dir * 260}px) rotate(${dir * 15}deg)`;
+      DOM.swipeCard.style.opacity = '0';
+
+      setTimeout(() => {
+        state.queueIndex++;
+        renderStats();
+        renderQueueCard();
+      }, 180);
+    }
+
+    function undoSwipeDecision() {
+      if (state.queueIndex <= 0) {
+        showToast('Already at the first card!');
+        ArcadeSFX.pass();
+        return;
+      }
+      state.queueIndex--;
+      const cards = state.queueCards || [];
+      if (cards[state.queueIndex]) {
+        cards[state.queueIndex].status = 'idle';
+      }
+      ArcadeSFX.coin();
+      renderStats();
+      renderQueueCard();
+      showToast('Rewound previous card!');
+    }
+
+    function openDeckCompleteModal() {
+      const kept = state.cards.filter(c => c.status === 'kept').length;
+      const killed = state.cards.filter(c => c.status === 'killed').length;
+      const variance = calculateAlgorithmicVariance(state.cards.filter(c => c.status === 'kept'));
+
+      DOM.completeKeptCount.textContent = kept;
+      DOM.completeKilledCount.textContent = killed;
+      DOM.completeVarianceScore.textContent = `${variance}%`;
+
+      ArcadeSFX.fanfare();
+      updateMascotLine(`Stage Clear! You starred ${kept} winning thumbnails!`);
+      DOM.deckCompleteModal.classList.remove('hidden');
+      DOM.deckCompleteModal.classList.add('flex');
+    }
+
+    function initSwipeMechanics() {
+      let startX = 0;
+      let currentX = 0;
+      let isDragging = false;
+
+      const onStart = (clientX) => {
+        if (!state.queueActive) return;
+        isDragging = true;
+        startX = clientX;
+        currentX = 0;
+        DOM.swipeCard.style.transition = 'none';
+      };
+
+      const onMove = (clientX) => {
+        if (!isDragging) return;
+        currentX = clientX - startX;
+        const rotate = currentX * 0.06;
+        DOM.swipeCard.style.transform = `translateX(${currentX}px) rotate(${rotate}deg)`;
+
+        const progress = Math.min(1, Math.abs(currentX) / 100);
+        if (currentX > 0) {
+          DOM.stampKeep.style.opacity = String(progress);
+          DOM.stampKill.style.opacity = '0';
+        } else {
+          DOM.stampKill.style.opacity = String(progress);
+          DOM.stampKeep.style.opacity = '0';
+        }
+      };
+
+      const onEnd = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        if (currentX > 90) commitSwipeDecision('kept');
+        else if (currentX < -90) commitSwipeDecision('killed');
+        else resetCardTransform();
+      };
+
+      DOM.swipeCardContainer.addEventListener('mousedown', (e) => onStart(e.clientX));
+      window.addEventListener('mousemove', (e) => onMove(e.clientX));
+      window.addEventListener('mouseup', onEnd);
+
+      DOM.swipeCardContainer.addEventListener('touchstart', (e) => onStart(e.touches[0].clientX), { passive: true });
+      DOM.swipeCardContainer.addEventListener('touchmove', (e) => onMove(e.touches[0].clientX), { passive: true });
+      DOM.swipeCardContainer.addEventListener('touchend', onEnd);
+
+      document.querySelectorAll('.rubric-pill').forEach(pill => {
+        pill.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const card = state.queueCards?.[state.queueIndex];
+          if (!card) return;
+          const key = pill.dataset.rubric;
+          card.rubric[key] = !card.rubric[key];
+          ArcadeSFX.coin();
+          pill.classList.toggle('bg-amber-300', card.rubric[key]);
+          pill.classList.toggle('border-slate-800', card.rubric[key]);
+          pill.classList.toggle('text-slate-900', card.rubric[key]);
+        });
+      });
+    }
+
+    function resetCardTransform() {
+      if (!DOM.swipeCard) return;
+      DOM.swipeCard.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+      DOM.swipeCard.style.transform = 'translateX(0px) rotate(0deg)';
+      DOM.swipeCard.style.opacity = '1';
+      if (DOM.stampKeep) DOM.stampKeep.style.opacity = '0';
+      if (DOM.stampKill) DOM.stampKill.style.opacity = '0';
+    }
+
+    /* ====================================================================
+     *  GRID & HUD STATS
+     * ==================================================================== */
+    function getFilteredCards() {
+      if (state.currentFilter === 'kept') return state.cards.filter(c => c.status === 'kept');
+      if (state.currentFilter === 'killed') return state.cards.filter(c => c.status === 'killed');
+      return state.cards;
+    }
+
+    function renderCards() {
+      const filtered = getFilteredCards();
+
+      if (state.cards.length === 0) {
+        DOM.emptyState.classList.remove('hidden');
+        DOM.gridContainer.innerHTML = '';
+        return;
+      }
+
+      DOM.emptyState.classList.add('hidden');
+      if (filtered.length === 0) {
+        DOM.gridContainer.innerHTML = `
+          <div class="col-span-full py-14 text-center text-xs font-bold text-slate-600 pixel-box-sm bg-white">
+            No cards in the <span class="text-slate-900 uppercase underline">${state.currentFilter}</span> slot yet!
+          </div>
+        `;
+        return;
+      }
+
+      DOM.gridContainer.innerHTML = filtered.map(card => createCardHTML(card)).join('');
+      bindCardEvents();
+    }
+
+    function renderStats() {
+      const total = state.cards.length;
+      const kept = state.cards.filter(c => c.status === 'kept').length;
+      const killed = state.cards.filter(c => c.status === 'killed').length;
+      const variance = calculateAlgorithmicVariance(kept > 0 ? state.cards.filter(c => c.status === 'kept') : state.cards);
+      const level = Math.max(1, 1 + Math.floor(kept / 3));
+
+      DOM.statTotal.textContent = total;
+      DOM.statKept.textContent = kept;
+      DOM.statVariance.textContent = `${variance}%`;
+      if (DOM.playerLevel) DOM.playerLevel.textContent = level;
+      DOM.tabCountAll.textContent = total;
+      DOM.tabCountKept.textContent = kept;
+      DOM.tabCountKilled.textContent = killed;
+
+      if (DOM.btnReopenSwipe) {
+        DOM.btnReopenSwipe.classList.toggle('hidden', total === 0);
+      }
+      if (DOM.floatingNextBar && DOM.floatingKeptCount) {
+        DOM.floatingKeptCount.textContent = kept;
+        DOM.floatingNextBar.classList.toggle('hidden', kept === 0);
+        DOM.floatingNextBar.classList.toggle('flex', kept > 0);
+      }
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      DOM.toastMessage.textContent = msg;
+      DOM.toast.classList.remove('hidden');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => hideToast(), 3200);
+    }
+
+    function hideToast() {
+      DOM.toast.classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
